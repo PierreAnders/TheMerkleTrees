@@ -9,10 +9,10 @@
 @inject AuthenticationStateProvider AuthStateProvider
 
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
+<div class="min-h-screen flex items-center justify-center">
     @if (!isAuthenticated)
     {
-        <button class="text-white text-xl gb-blue-700 hover:bg-blue-800 px-4 py-2 rounded" @onclick="ConnectToMetaMask">
+        <button class="transition ease-in-out duration-300 text-white text-xl bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded" @onclick="ConnectToMetaMask">
             @buttonText
         </button>
     }
