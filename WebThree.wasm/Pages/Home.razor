@@ -1,0 +1,58 @@
+﻿@page "/"
+
+@using MetaMask.Blazor
+@using MetaMask.Blazor.Exceptions
+@using Microsoft.AspNetCore.Components.Authorization
+@using WebThree.wasm.Services
+@inject IMetaMaskService MetaMaskService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+<div class="authentification-page">
+    @if (!isAuthenticated)
+    {
+    <button @onclick="ConnectToMetaMask">
+        @buttonText
+    </button>
+    }
+    else
+    {
+        <div>@userAddress</div>
+    }
+</div>
+
+@code{
+
+    private bool isAuthenticated = false;
+    private string userAddress;
+    private string buttonText = "Connect Wallet";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            isAuthenticated = true;
+            userAddress = user.Identity.Name;
+        }
+    }
+
+    private async Task ConnectToMetaMask()
+    {
+        try
+        {
+            await MetaMaskService.ConnectMetaMask();
+            userAddress = await MetaMaskService.GetSelectedAddress();
+            await ((EthereumAuthenticationStateProvider)AuthStateProvider).MarkUserAsAuthenticated(userAddress);
+            isAuthenticated = true;
+            buttonText = userAddress;
+        }
+        catch (UserDeniedException)
+        {
+            isAuthenticated = false;
+        }
+    }
+}
