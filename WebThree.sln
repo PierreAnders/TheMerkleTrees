@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.wasm", "WebThree.wasm\WebThree.wasm.csproj", "{21914746-5A75-4466-8A94-51E72643742E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.client", "WebThree.client\WebThree.client.csproj", "{21914746-5A75-4466-8A94-51E72643742E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.server", "WebThree.server\WebThree.server.csproj", "{CD3644F1-1A07-42F1-943E-E99D34B624BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.api", "WebThree.api\WebThree.api.csproj", "{783636AB-35F5-481E-B831-DCF914EC140E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.domain", "WebThree.domain\WebThree.domain.csproj", "{F8E92BFD-CD65-41BD-9F8F-6D5F0F5D0831}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.domain", "WebThree.domain\WebThree.domain.csproj", "{CA28F056-B1B9-4BF4-857A-5F7F0EBA6527}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.infra", "WebThree.infra\WebThree.infra.csproj", "{1C22EDB2-23B8-4306-9BED-5B35D11C3B0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebThree.infrastructure", "WebThree.infrastructure\WebThree.infrastructure.csproj", "{FDA8ED78-9664-492B-B1F6-0BBDCC4CCFD8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,17 +18,17 @@ Global
 		{21914746-5A75-4466-8A94-51E72643742E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21914746-5A75-4466-8A94-51E72643742E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21914746-5A75-4466-8A94-51E72643742E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CD3644F1-1A07-42F1-943E-E99D34B624BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD3644F1-1A07-42F1-943E-E99D34B624BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD3644F1-1A07-42F1-943E-E99D34B624BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD3644F1-1A07-42F1-943E-E99D34B624BC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F8E92BFD-CD65-41BD-9F8F-6D5F0F5D0831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F8E92BFD-CD65-41BD-9F8F-6D5F0F5D0831}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F8E92BFD-CD65-41BD-9F8F-6D5F0F5D0831}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F8E92BFD-CD65-41BD-9F8F-6D5F0F5D0831}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C22EDB2-23B8-4306-9BED-5B35D11C3B0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C22EDB2-23B8-4306-9BED-5B35D11C3B0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C22EDB2-23B8-4306-9BED-5B35D11C3B0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C22EDB2-23B8-4306-9BED-5B35D11C3B0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA28F056-B1B9-4BF4-857A-5F7F0EBA6527}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA28F056-B1B9-4BF4-857A-5F7F0EBA6527}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA28F056-B1B9-4BF4-857A-5F7F0EBA6527}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA28F056-B1B9-4BF4-857A-5F7F0EBA6527}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDA8ED78-9664-492B-B1F6-0BBDCC4CCFD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDA8ED78-9664-492B-B1F6-0BBDCC4CCFD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDA8ED78-9664-492B-B1F6-0BBDCC4CCFD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDA8ED78-9664-492B-B1F6-0BBDCC4CCFD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
