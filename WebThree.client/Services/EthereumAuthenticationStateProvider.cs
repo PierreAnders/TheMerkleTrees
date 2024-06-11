@@ -4,7 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using MetaMask.Blazor;
 
-namespace WebThree.wasm.Services;
+namespace WebThree.client.Services;
 
 
 public class EthereumAuthenticationStateProvider: AuthenticationStateProvider

@@ -1,0 +1,51 @@
+@using System.Diagnostics
+@using System.Net.Http
+@using System.Net.Http.Json
+
+<h3>Ajouter un fichier à IPFS</h3>
+
+<InputFile OnChange="@HandleFileSelected" />
+
+@if (fileContent != null)
+{
+<p>Fichier sélectionné : @fileName</p>
+<button class="btn btn-primary" @onclick="AddToIPFS">Ajouter à IPFS</button>
+}
+
+@code {
+    
+    private byte[] fileContent;
+    private string fileName;
+    
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        fileName = file.Name;
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(1024 * 1024 * 5).CopyToAsync(ms);
+        fileContent = ms.ToArray();
+    }
+    
+    private async Task AddToIPFS()
+    {
+        var httpClient = new HttpClient();
+        var formData = new MultipartFormDataContent();
+        formData.Add(new ByteArrayContent(fileContent), "file", fileName);
+        
+        var response = await httpClient.PostAsync("http://127.0.0.1:5001/api/v0/add", formData);
+        response.EnsureSuccessStatusCode();
+        
+        var result = await response.Content.ReadFromJsonAsync<AddResponse>();
+        var cid = result.Hash;
+        var url = $"https://ipfs.io/ipfs/{cid}";
+        
+        Console.WriteLine($"Fichier ajouté à IPFS avec CID : {cid}");
+        Console.WriteLine($"URL du fichier : {url}");
+    }
+    
+    private class AddResponse
+    {
+        public string Hash { get; set; }
+    }
+
+}

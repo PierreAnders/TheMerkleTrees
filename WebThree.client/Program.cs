@@ -3,8 +3,8 @@ using MetaMask.Blazor;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using WebThree.wasm;
-using WebThree.wasm.Services;
+using WebThree.client;
+using WebThree.client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
