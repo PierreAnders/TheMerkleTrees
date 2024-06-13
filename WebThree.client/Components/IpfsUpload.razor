@@ -94,22 +94,13 @@
             EncryptionKey = null
         };
 
-        // SaveMetadata(file);
+        var apiResponse = await httpClient.PostAsJsonAsync("http:localhost:5000/api/files", file);
+        apiResponse.EnsureSuccessStatusCode();
         
         Console.WriteLine(($"Nom du fichier : {file.Name}"));
         Console.WriteLine($"Ajouté à IPFS avec CID : {cid}");
         Console.WriteLine($"URL du fichier : {url}");
         Console.WriteLine(($"Propriétaire : {file.Owner}"));
-    }
-    
-    private void SaveMetadata(File file)
-    {
-        Console.WriteLine(file);
-        
-        // with http Async Task
-        // var httpClient = new HttpClient();
-        // var response = await httpClient.PostAsJsonAsync("http://localhost:3000/api/files", file);
-        // response.EnsureSuccessStatusCode();
     }
     
     private class AddResponse
