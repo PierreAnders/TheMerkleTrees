@@ -1,21 +1,66 @@
 @using System.Diagnostics
 @using System.Net.Http
 @using System.Net.Http.Json
+@using System.ComponentModel
+@using System.Security.Claims;
+@using MetaMask.Blazor
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMetaMaskService MetaMaskService
 
-<h3>Ajouter un fichier à IPFS</h3>
+<div class="w-full flex items-center justify-center flex-col py-12 bg-[#ffffff] mb-12">
+    <h1 class="text-2xl mb-2">Upload File</h1>
 
-<InputFile OnChange="@HandleFileSelected" />
+    <InputFile 
+        class="transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-4 py-2 rounded mt-4 mb-2 cursor-pointer" 
+        OnChange="@HandleFileSelected" 
+    />
+    
+    <div class="mt-4 mb-2">
+        <label for="category">Category:</label>
+        <InputSelect @bind-Value="category" TValue="string" class="px-4 py-2 border rounded">
+            <option value="">Select a category</option>
+            <option value="Hortense">Hortense</option>
+            <option value="Pierre">Pierre</option>
+            <option value="Ariane">Ariane</option>
+        </InputSelect>
+    </div>
+    
+    <div class="mt-4 mb-2">
+        <input type="checkbox" id="isPublic" @BindableAttribute="isPublic" />
+        <label for="isPublic">Public</label>
+    </div>
 
-@if (fileContent != null)
-{
-<p>Fichier sélectionné : @fileName</p>
-<button class="btn btn-primary" @onclick="AddToIPFS">Ajouter à IPFS</button>
-}
+    @if (fileContent != null)
+    {
+        <button class="transition ease-in-out duration-300 text-sm text-white bg-gray-700 hover:bg-gray-800 px-4 py-2 mt-2 mb-4 rounded" 
+                @onclick="AddToIPFS">Send
+        </button>
+    }
+</div> 
 
 @code {
     
     private byte[] fileContent;
     private string fileName;
+    private string category;
+    private bool isPublic;
+    private string userAddress;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity.IsAuthenticated)
+        {
+            userAddress = user.Identity.Name;
+        }
+        else
+        {
+            Console.WriteLine("User is not authenticated");
+        }
+    }
     
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -39,8 +84,32 @@
         var cid = result.Hash;
         var url = $"https://ipfs.io/ipfs/{cid}";
         
-        Console.WriteLine($"Fichier ajouté à IPFS avec CID : {cid}");
+        var file = new File
+        {
+            Name = fileName,
+            Hash = cid,
+            Category = category,
+            IsPublic = true,
+            Owner = userAddress,
+            EncryptionKey = null
+        };
+
+        // SaveMetadata(file);
+        
+        Console.WriteLine(($"Nom du fichier : {file.Name}"));
+        Console.WriteLine($"Ajouté à IPFS avec CID : {cid}");
         Console.WriteLine($"URL du fichier : {url}");
+        Console.WriteLine(($"Propriétaire : {file.Owner}"));
+    }
+    
+    private void SaveMetadata(File file)
+    {
+        Console.WriteLine(file);
+        
+        // with http Async Task
+        // var httpClient = new HttpClient();
+        // var response = await httpClient.PostAsJsonAsync("http://localhost:3000/api/files", file);
+        // response.EnsureSuccessStatusCode();
     }
     
     private class AddResponse
@@ -48,4 +117,13 @@
         public string Hash { get; set; }
     }
 
+    public class File
+    {
+        public string Name { get; set; }
+        public string Hash { get; set; }
+        public string Category { get; set; }
+        public bool IsPublic { get; set; }
+        public string Owner { get; set; }
+        public string EncryptionKey { get; set; }
+    }
 }
