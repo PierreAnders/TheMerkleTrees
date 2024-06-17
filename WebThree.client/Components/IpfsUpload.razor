@@ -84,23 +84,8 @@
         var cid = result.Hash;
         var url = $"https://ipfs.io/ipfs/{cid}";
         
-        var file = new File
-        {
-            Name = fileName,
-            Hash = cid,
-            Category = category,
-            IsPublic = true,
-            Owner = userAddress,
-            EncryptionKey = null
-        };
-
-        var apiResponse = await httpClient.PostAsJsonAsync("http:localhost:5000/api/files", file);
-        apiResponse.EnsureSuccessStatusCode();
-        
-        Console.WriteLine(($"Nom du fichier : {file.Name}"));
-        Console.WriteLine($"Ajouté à IPFS avec CID : {cid}");
+        Console.WriteLine($"Fichier ajouté à IPFS avec CID : {cid}");
         Console.WriteLine($"URL du fichier : {url}");
-        Console.WriteLine(($"Propriétaire : {file.Owner}"));
     }
     
     private class AddResponse
