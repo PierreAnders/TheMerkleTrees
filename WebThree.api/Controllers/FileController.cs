@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WebThree.api.Services;
 
 namespace WebThree.api.Controllers;
 
@@ -6,37 +7,64 @@ namespace WebThree.api.Controllers;
 [ApiController]
 public class FilesController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly MongoDBService _mongoDBService;
+    public FilesController(MongoDBService mongoDbService) =>
+        _mongoDBService = mongoDbService;
 
-    public FilesController(ApplicationDbContext context)
+    [HttpGet]
+    public async Task<List<File>> Get() =>
+        await _mongoDBService.GetAsync();
+
+    [HttpGet("{hash}")]
+    public async Task<ActionResult<File>> Get(string hash)
     {
-        _context = context;
-    }
+        var file = await _mongoDBService.GetAsync(hash);
 
-    [HttpPost]
-    public async Task<IActionResult> PostFile([FromBody] File file)
-    {
-        if (file == null)
-        {
-            return BadRequest();
-        }
-
-        _context.Files.Add(file);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetFile), new { id = file.Id }, file);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetFile(int id)
-    {
-        var file = await _context.Files.FindAsync(id);
-
-        if (file == null)
+        if (file is null)
         {
             return NotFound();
         }
 
-        return Ok(file);
+        return file;
+    }
+
+    [HttpPost("{hash}")]
+    public async Task<IActionResult> Post(File newFile)
+    {
+        await _mongoDBService.CreateAsync(newFile);
+
+        return CreatedAtAction(nameof(Get), new { hash = newFile.Hash }, newFile);
+    }
+
+    [HttpPut("{hash}")]
+    public async Task<IActionResult> Update(string hash, File updatedFile)
+    {
+        var file = await _mongoDBService.GetAsync((hash));
+
+        if (file is null)
+        {
+            return NotFound();
+        }
+
+        updatedFile.Hash = file.Hash;
+
+        await _mongoDBService.UpdateAsync(hash, updatedFile);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{hash}")]
+    public async Task<IActionResult> Delete(string hash)
+    {
+        var file = await _mongoDBService.GetAsync(hash);
+
+        if (file is null)
+        {
+            return NotFound();
+        }
+
+        await _mongoDBService.RemoveAsync((hash));
+
+        return NoContent();
     }
 }
