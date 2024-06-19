@@ -2,11 +2,13 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using System.ComponentModel
+@using System.Net
 @using System.Security.Claims;
 @using MetaMask.Blazor
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IMetaMaskService MetaMaskService
+@inject HttpClient Http
 
 <div class="w-full flex items-center justify-center flex-col py-12 bg-[#ffffff] mb-12">
     <h1 class="text-2xl mb-2">Upload File</h1>
@@ -86,6 +88,21 @@
         
         Console.WriteLine($"Fichier ajouté à IPFS avec CID : {cid}");
         Console.WriteLine($"URL du fichier : {url}");
+
+        var file = new File
+        {
+            Name = fileName,
+            Hash = cid,
+            Category = category,
+            IsPublic = isPublic,
+            Owner = userAddress,
+            EncryptionKey = "exampleOfKey"
+        };
+
+        var saveResponse = await Http.PostAsJsonAsync("http://localhost:5083/api/Files", file);
+        saveResponse.EnsureSuccessStatusCode();
+        
+        Console.WriteLine("Fichier enregistré en bd");
     }
     
     private class AddResponse

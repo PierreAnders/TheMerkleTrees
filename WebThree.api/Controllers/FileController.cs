@@ -3,8 +3,8 @@ using WebThree.api.Services;
 
 namespace WebThree.api.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class FilesController : ControllerBase
 {
     private readonly MongoDBService _mongoDBService;
@@ -28,7 +28,7 @@ public class FilesController : ControllerBase
         return file;
     }
 
-    [HttpPost("{hash}")]
+    [HttpPost]
     public async Task<IActionResult> Post(File newFile)
     {
         await _mongoDBService.CreateAsync(newFile);
