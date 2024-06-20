@@ -15,10 +15,10 @@ public class FilesController : ControllerBase
     public async Task<List<File>> Get() =>
         await _mongoDBService.GetAsync();
 
-    [HttpGet("{hash}")]
-    public async Task<ActionResult<File>> Get(string hash)
+    [HttpGet("{id:length(24)}")]
+    public async Task<ActionResult<File>> Get(string id)
     {
-        var file = await _mongoDBService.GetAsync(hash);
+        var file = await _mongoDBService.GetAsync(id);
 
         if (file is null)
         {
@@ -33,37 +33,37 @@ public class FilesController : ControllerBase
     {
         await _mongoDBService.CreateAsync(newFile);
 
-        return CreatedAtAction(nameof(Get), new { hash = newFile.Hash }, newFile);
+        return CreatedAtAction(nameof(Get), new { id = newFile.Id }, newFile);
     }
 
-    [HttpPut("{hash}")]
-    public async Task<IActionResult> Update(string hash, File updatedFile)
+    [HttpPut("{id:length(24)}")]
+    public async Task<IActionResult> Update(string id, File updatedFile)
     {
-        var file = await _mongoDBService.GetAsync((hash));
+        var file = await _mongoDBService.GetAsync((id));
 
         if (file is null)
         {
             return NotFound();
         }
 
-        updatedFile.Hash = file.Hash;
+        updatedFile.Id = file.Id;
 
-        await _mongoDBService.UpdateAsync(hash, updatedFile);
+        await _mongoDBService.UpdateAsync(id, updatedFile);
 
         return NoContent();
     }
 
-    [HttpDelete("{hash}")]
-    public async Task<IActionResult> Delete(string hash)
+    [HttpDelete("{id:length(24)}")]
+    public async Task<IActionResult> Delete(string id)
     {
-        var file = await _mongoDBService.GetAsync(hash);
+        var file = await _mongoDBService.GetAsync(id);
 
         if (file is null)
         {
             return NotFound();
         }
 
-        await _mongoDBService.RemoveAsync((hash));
+        await _mongoDBService.RemoveAsync((id));
 
         return NoContent();
     }

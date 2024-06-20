@@ -7,9 +7,9 @@ namespace WebThree.api;
 public class File
 {
     [BsonId]
-    [BsonRepresentation(BsonType.String)]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; } = null!;
     public string Hash { get; set; }
-
     public string Name { get; set; } = null!;
     public string Category { get; set; } = null!;
     public bool IsPublic { get; set; }
