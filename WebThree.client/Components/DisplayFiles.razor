@@ -32,14 +32,12 @@
         if (user.Identity.IsAuthenticated)
         {
             userAddress = user.Identity.Name;
+            files = await Http.GetFromJsonAsync<List<File>>($"http://localhost:5083/api/Files/user/{userAddress}");
         }
         else
         {
             Console.WriteLine("User is not authenticated");
         }
-        
-        files = await Http.GetFromJsonAsync<List<File>>("http://localhost:5083/api/Files");
-        
         Console.Write(files);
     }
 

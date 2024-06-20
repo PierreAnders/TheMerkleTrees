@@ -32,4 +32,7 @@ public class MongoDBService
 
     public async Task RemoveAsync(string id) =>
         await _filesCollection.DeleteOneAsync(x => x.Id == id);
+
+    public async Task<List<File>> GetFilesByUserAsync(string userId) =>
+        await _filesCollection.Find(file => file.Owner == userId).ToListAsync();
 }
