@@ -1,6 +1,0 @@
-@WebThree.api_HostAddress = http://localhost:5083
-
-GET {{WebThree.api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
