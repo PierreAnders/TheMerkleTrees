@@ -67,4 +67,8 @@ public class FilesController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("user/{userId}")]
+    public async Task<List<File>> GetFilesByUser(string userId) =>
+        await _mongoDBService.GetFilesByUserAsync(userId);
 }

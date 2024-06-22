@@ -4,16 +4,19 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IMetaMaskService MetaMaskService
 @inject HttpClient Http
+@inject IJSRuntime JS
 
-<div class="mt-4 mb-2 flex justify-center pb-12">
+<div class="mt-4 mb-2 mx-12 flex justify-center pb-12">
     <div class="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         @foreach (var file in files)
         {
-            <div class="border rounded-lg shadow-lg p-4 bg-white">
-                <h2 class="text-lg font-bold mb-2">@file.Name</h2>
+            <div class="border rounded-lg shadow-lg p-4 bg-gray-100">
+                <h2 class="text-gray-700 font-bold mb-2">@file.Name</h2>
                 <p class="text-gray-700"><strong>Category:</strong> @file.Category</p>
                 <p class="text-gray-700"><strong>Public:</strong> @(file.IsPublic ? "Yes" : "No")</p>
                 <p class="text-gray-700"><strong>Owner:</strong> @TruncateAddress(file.Owner)</p>
+                <p class="text-gray-700"><strong>Link:</strong> <a href="@GetLinkToFile(file.Hash)" target="_blank">Open File</a></p>
+                <p class="text-gray-700"><strong>Link:</strong> <button @onclick="() => DownloadFile(file.Hash)">Download File</button></p>
             </div>
         }
     </div>
@@ -32,14 +35,12 @@
         if (user.Identity.IsAuthenticated)
         {
             userAddress = user.Identity.Name;
+            files = await Http.GetFromJsonAsync<List<File>>($"https://localhost:7066/api/Files/user/{userAddress}");
         }
         else
         {
             Console.WriteLine("User is not authenticated");
         }
-        
-        files = await Http.GetFromJsonAsync<List<File>>("http://localhost:5083/api/Files");
-        
         Console.Write(files);
     }
 
@@ -52,6 +53,18 @@
 
         return $"{address.Substring(0, 4)}...{address.Substring(address.Length - 3)}";
     }
+
+    private string GetLinkToFile(string hash)
+    {
+        return $"ipfs://{hash}";
+    }
+
+    private async Task DownloadFile(string hash)
+    {
+        var fileName = $"{hash}.txt";
+        var fileUrl = $"ipfs://{hash}";
+        await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
+    }
     
     private class AddResponse
     {
@@ -61,10 +74,10 @@
     public class File
     {
         public string Id { get; set; } = null!;
+        public string Hash { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Category { get; set; } = null!;
         public bool IsPublic { get; set; }
         public string Owner { get; set; } = null!;
-        public string EncryptionKey { get; set; } = null!;
     }
 }
