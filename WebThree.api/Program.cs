@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WebThree.api;
@@ -7,14 +6,15 @@ using WebThree.api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure CORS to allow specific origin
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins",
-        builder =>
+    options.AddPolicy("AllowSpecificOrigin",
+        policyBuilder =>
         {
-            builder.WithOrigins("http://localhost:5292")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+            policyBuilder.WithOrigins("https://d08ljx1q-5292.uks1.devtunnels.ms")
+                         .AllowAnyHeader()
+                         .AllowAnyMethod();
         });
 });
 
@@ -24,10 +24,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<MongoDBService>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
-
-// app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
 {
@@ -39,9 +38,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseCors("AllowSpecificOrigins");
 
-app.UseCors("AllowAll");
+// Use the correct CORS policy name
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthorization();
 

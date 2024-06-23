@@ -94,7 +94,7 @@
         formData.Add(new StringContent(isPublic.ToString()), "isPublic");
         formData.Add(new StringContent(userAddress), "userAddress");
 
-        var response = await Http.PostAsync("https://localhost:7066/api/Files/Upload", formData);
+        var response = await Http.PostAsync("https://d08ljx1q-5083.uks1.devtunnels.ms/api/Files/Upload", formData);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<UploadResponse>();

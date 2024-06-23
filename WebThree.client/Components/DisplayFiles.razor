@@ -35,7 +35,7 @@
         if (user.Identity.IsAuthenticated)
         {
             userAddress = user.Identity.Name;
-            files = await Http.GetFromJsonAsync<List<File>>($"https://localhost:7066/api/Files/user/{userAddress}");
+            files = await Http.GetFromJsonAsync<List<File>>($"https://d08ljx1q-5083.uks1.devtunnels.ms/api/Files/user/{userAddress}");
         }
         else
         {
