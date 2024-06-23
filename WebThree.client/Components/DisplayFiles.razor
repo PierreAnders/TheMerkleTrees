@@ -62,7 +62,7 @@
     private async Task DownloadFile(string hash)
     {
         var fileName = $"{hash}.txt";
-        var fileUrl = $"ipfs://{hash}";
+        var fileUrl = $"https://e54e-78-127-132-196.ngrok-free.app/ipfs/{hash}";
         await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
     }
     
