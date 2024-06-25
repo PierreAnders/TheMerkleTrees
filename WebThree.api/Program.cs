@@ -12,7 +12,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policyBuilder =>
         {
-            policyBuilder.WithOrigins("https://d08ljx1q-5292.uks1.devtunnels.ms")
+            policyBuilder.WithOrigins("http://localhost:5292")
                          .AllowAnyHeader()
                          .AllowAnyMethod();
         });
