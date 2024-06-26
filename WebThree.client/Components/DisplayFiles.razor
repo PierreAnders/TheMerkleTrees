@@ -11,32 +11,23 @@
 @inject FileStateContainer FileState
 
 <div class="mt-4 mb-2 mx-12 flex justify-center pb-12">
-    <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         @foreach (var file in FileState.Files)
         {
             <div class="m-4 flex flex-col items-center justify-center">
-                <object type="image/svg+xml" data="images/file-logo.svg" width="72px" height="72px"></object>
+                <a href="@GetLinkToFile(file.Hash)" target="_blank">
+                    <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo" />
+                </a>
 
-                <div class="flex justify-center items-center text-gray-400 text-xs mb-1 mx-4 h-8">@file.Name</div>
+                <div class="flex justify-center items-center text-gray-400 text-xs mb-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
 
-                <p class="text-gray-500 text-xs mb-1">@file.Category</p>
-
-                <div class="flex justify-between items-center">
-                    <a href="@GetLinkToFile(file.Hash)" target="_blank">
-                        <img src="images/open-logo.svg" width="20px" height="20px" alt="Download">
-                    </a>
-
-                    <a href="javascript:void(0);" @onclick="() => DownloadFile(file.Hash)">
-                        <img src="images/download-logo.svg" width="20px" height="20px" alt="Download">
-                    </a>
-                </div>
             </div>
         }
     </div>
 </div>
 
 @code {
-    
+
     private string userAddress;
     private string apiBaseUrl;
 
@@ -44,7 +35,7 @@
     {
         FileState.OnChange += StateHasChanged;
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         apiBaseUrl = Configuration["ApiBaseUrl"];
@@ -89,9 +80,45 @@
     {
         public string Hash { get; set; }
     }
-    
+
     public void Dispose()
     {
         FileState.OnChange -= StateHasChanged;
     }
+
+    private string TruncateFileName(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName) || fileName.Length < 10)
+        {
+            return fileName;
+        }
+
+        return $"{fileName.Substring(0, 12)}...{fileName.Substring(fileName.Length - 8)}";
+    }
 }
+
+
+@* <div class="mt-4 mb-2 mx-12 flex justify-center pb-12"> *@
+@*     <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6"> *@
+@*         @foreach (var file in FileState.Files) *@
+@*         { *@
+@*             <div class="m-4 flex flex-col items-center justify-center"> *@
+@*                 <a href="@GetLinkToFile(file.Hash)" target="_blank"> *@
+@*                     <object type="image/svg+xml" data="images/file-logo.svg" width="72px" height="72px"></object> *@
+@*                 </a> *@
+@* *@
+@*                 <div class="flex justify-center items-center text-gray-400 text-xs mb-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div> *@
+@* *@
+@*                 $1$ <p class="text-gray-500 text-xs mb-1">@file.Category</p> #1# *@
+@* *@
+@*                 $1$ <div class="flex justify-between items-center space-x-4"> #1# *@
+@*                 $1$ <img src="images/open-logo.svg" width="20px" height="20px" alt="Open"> #1# *@
+@*                  *@
+@*                 $1$ <a href="javascript:void(0);" @onclick="() => DownloadFile(file.Hash)"> #1# *@
+@*                 $1$     <img src="images/download-logo.svg" width="20px" height="20px" alt="Download"> #1# *@
+@*                 $1$ </a> #1# *@
+@*                 $1$ </div> #1# *@
+@*             </div> *@
+@*         } *@
+@*     </div> *@
+@* </div> *@
