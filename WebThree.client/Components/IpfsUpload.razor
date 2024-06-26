@@ -18,15 +18,15 @@
 @inject FileStateContainer FileState
 
 <div class="min-h-screen w-full flex items-center justify-center flex-col bg-gray-100 mb-12">
-    <div class="text-2xl mb-2">Téléverser un fichier</div>
+    <div class="text-2xl mb-2">The Merkle Trees</div>
 
-    <InputFile class="transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-4 py-2 rounded mt-4 mb-2 cursor-pointer"
+    <InputFile class="transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-2 py-2 rounded mt-4 mb-2 cursor-pointer"
                OnChange="@HandleFileSelected" />
 
     <div class="mt-4 mb-2">
-        <label for="category">Category:</label>
+        <label for="category">Categorie:</label>
         <InputSelect @bind-Value="category" TValue="string" class="px-4 py-2 border rounded">
-            <option value="">. . . . . . . . . .</option>
+            <option value="">Maison</option>
             <option value="Hortense">Hortense</option>
             <option value="Pierre">Pierre</option>
             <option value="Ariane">Ariane</option>

@@ -16,11 +16,28 @@
         {
             <div class="m-4 flex flex-col items-center justify-center">
                 <a href="@GetLinkToFile(file.Hash)" target="_blank">
-                    <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo" />
+                    @if (GetFileExtension(file.Name) == ".txt")
+                    {
+                        <img src="images/txt-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".html")
+                    {
+                        <img src="images/html-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".pdf")
+                    {
+                        <img src="images/pdf-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".png" || GetFileExtension(file.Name) == ".jpg" || GetFileExtension(file.Name) == ".jpeg")
+                    {
+                        <img src="images/img-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else
+                    {
+                        <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
                 </a>
-
-                <div class="flex justify-center items-center text-gray-400 text-xs mb-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
-
+                <div class="flex justify-center items-center text-gray-400 text-xs my-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
             </div>
         }
     </div>
@@ -64,6 +81,13 @@
         return $"{address.Substring(0, 4)}...{address.Substring(address.Length - 3)}";
     }
 
+    private string GetFileExtension(string fileName)
+    {
+        string fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+
+        return fileExtension;
+    }
+
     private string GetLinkToFile(string hash)
     {
         return $"ipfs://{hash}";
@@ -95,6 +119,7 @@
 
         return $"{fileName.Substring(0, 12)}...{fileName.Substring(fileName.Length - 8)}";
     }
+
 }
 
 
