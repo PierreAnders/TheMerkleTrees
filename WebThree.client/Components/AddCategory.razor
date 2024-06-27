@@ -1,0 +1,85 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<h3>Ajouter une catégorie</h3>
+
+<EditForm Model="@newCategory" OnValidSubmit="CreateCategory">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <div class="form-group">
+        <label for="categoryName">Nom de la catégorie</label>
+        <InputText id="categoryName" @bind-Value="newCategory.Name" class="form-control"/>
+        <ValidationMessage For="() => newCategory.Name"/>
+    </div>
+    <button class="btn btn-primary" type="submit">Ajouter</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info">@message</div>
+}
+
+@code {
+    private Category newCategory = new Category();
+    private string message;
+    private string userAddress;
+    private string apiBaseUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiBaseUrl = Configuration["ApiBaseUrl"];
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            userAddress = user.Identity.Name;
+            newCategory.Owner = userAddress;
+        }
+        else
+        {
+            message = "Utilisateur non authentifié.";
+        }
+    }
+
+    private async Task CreateCategory()
+    {
+        if (string.IsNullOrEmpty(newCategory.Name))
+        {
+            message = "Le nom de la catégorie ne peut pas être vide.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(newCategory.Owner))
+        {
+            message = "Adresse utilisateur non trouvée.";
+            return;
+        }
+        
+        newCategory.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+
+        var response = await Http.PostAsJsonAsync($"{apiBaseUrl}/api/Categories", newCategory);
+
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Catégorie ajoutée avec succès.";
+            newCategory.Name = string.Empty;
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            message = $"Erreur lors de l'ajout de la catégorie : {errorContent}";
+        }
+    }
+
+    public class Category
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Owner { get; set; }
+    }
+}
