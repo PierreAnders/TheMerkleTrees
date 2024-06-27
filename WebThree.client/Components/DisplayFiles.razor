@@ -11,42 +11,55 @@
 @inject FileStateContainer FileState
 
 <div class="mt-4 mb-2 mx-12 flex justify-center pb-12">
-    <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        @foreach (var file in FileState.Files)
-        {
-            <div class="m-4 flex flex-col items-center justify-center">
-                <a href="@GetLinkToFile(file.Hash)" target="_blank">
-                    @if (GetFileExtension(file.Name) == ".txt")
-                    {
-                        <img src="images/txt-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                    }
-                    else if (GetFileExtension(file.Name) == ".html")
-                    {
-                        <img src="images/html-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                    }
-                    else if (GetFileExtension(file.Name) == ".pdf")
-                    {
-                        <img src="images/pdf-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                    }
-                    else if (GetFileExtension(file.Name) == ".png" || GetFileExtension(file.Name) == ".jpg" || GetFileExtension(file.Name) == ".jpeg")
-                    {
-                        <img src="images/img-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                    }
-                    else
-                    {
-                        <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                    }
-                </a>
-                <div class="flex justify-center items-center text-gray-400 text-xs my-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
-            </div>
-        }
+    <div class="w-full max-w-4xl">
+        <div class="flex justify-center mb-4">
+            <select @onchange="OnCategoryChanged" class="text-gray-500 transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-2 py-1 rounded">
+                <option value="">Toutes les catégories</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            @foreach (var file in sortedFiles)
+            {
+                <div class="m-4 flex flex-col items-center justify-center">
+                    <a href="@GetLinkToFile(file.Hash)" target="_blank">
+                        @if (GetFileExtension(file.Name) == ".txt")
+                        {
+                            <img src="images/txt-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                        }
+                        else if (GetFileExtension(file.Name) == ".html")
+                        {
+                            <img src="images/html-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                        }
+                        else if (GetFileExtension(file.Name) == ".pdf")
+                        {
+                            <img src="images/pdf-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                        }
+                        else if (GetFileExtension(file.Name) == ".png" || GetFileExtension(file.Name) == ".jpg" || GetFileExtension(file.Name) == ".jpeg")
+                        {
+                            <img src="images/img-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                        }
+                        else
+                        {
+                            <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                        }
+                    </a>
+                    <div class="flex justify-center items-center text-gray-400 text-xs my-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
 @code {
-
     private string userAddress;
     private string apiBaseUrl;
+    private string selectedCategory = "";
+    private List<File> sortedFiles = new List<File>();
+    private List<string> categories = new List<string>();
 
     protected override void OnInitialized()
     {
@@ -64,10 +77,30 @@
             userAddress = user.Identity.Name;
             var files = await Http.GetFromJsonAsync<List<File>>($"{apiBaseUrl}/api/Files/user/{userAddress}");
             FileState.SetFiles(files);
+            categories = files.Select(f => f.Category).Distinct().ToList();
+            SortFiles();
         }
         else
         {
             Console.WriteLine("User is not authenticated");
+        }
+    }
+
+    private void OnCategoryChanged(ChangeEventArgs e)
+    {
+        selectedCategory = e.Value.ToString();
+        SortFiles();
+    }
+
+    private void SortFiles()
+    {
+        if (string.IsNullOrEmpty(selectedCategory))
+        {
+            sortedFiles = FileState.Files;
+        }
+        else
+        {
+            sortedFiles = FileState.Files.Where(f => f.Category == selectedCategory).ToList();
         }
     }
 
@@ -84,7 +117,6 @@
     private string GetFileExtension(string fileName)
     {
         string fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
-
         return fileExtension;
     }
 
@@ -100,16 +132,6 @@
         await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
     }
 
-    private class AddResponse
-    {
-        public string Hash { get; set; }
-    }
-
-    public void Dispose()
-    {
-        FileState.OnChange -= StateHasChanged;
-    }
-
     private string TruncateFileName(string fileName)
     {
         if (string.IsNullOrEmpty(fileName) || fileName.Length < 10)
@@ -120,30 +142,8 @@
         return $"{fileName.Substring(0, 12)}...{fileName.Substring(fileName.Length - 8)}";
     }
 
+    public void Dispose()
+    {
+        FileState.OnChange -= StateHasChanged;
+    }
 }
-
-
-@* <div class="mt-4 mb-2 mx-12 flex justify-center pb-12"> *@
-@*     <div class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6"> *@
-@*         @foreach (var file in FileState.Files) *@
-@*         { *@
-@*             <div class="m-4 flex flex-col items-center justify-center"> *@
-@*                 <a href="@GetLinkToFile(file.Hash)" target="_blank"> *@
-@*                     <object type="image/svg+xml" data="images/file-logo.svg" width="72px" height="72px"></object> *@
-@*                 </a> *@
-@* *@
-@*                 <div class="flex justify-center items-center text-gray-400 text-xs mb-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div> *@
-@* *@
-@*                 $1$ <p class="text-gray-500 text-xs mb-1">@file.Category</p> #1# *@
-@* *@
-@*                 $1$ <div class="flex justify-between items-center space-x-4"> #1# *@
-@*                 $1$ <img src="images/open-logo.svg" width="20px" height="20px" alt="Open"> #1# *@
-@*                  *@
-@*                 $1$ <a href="javascript:void(0);" @onclick="() => DownloadFile(file.Hash)"> #1# *@
-@*                 $1$     <img src="images/download-logo.svg" width="20px" height="20px" alt="Download"> #1# *@
-@*                 $1$ </a> #1# *@
-@*                 $1$ </div> #1# *@
-@*             </div> *@
-@*         } *@
-@*     </div> *@
-@* </div> *@
