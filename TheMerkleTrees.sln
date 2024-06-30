@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheMerkleTrees.Client", "TheMerkleTrees.Client\TheMerkleTrees.Client.csproj", "{21914746-5A75-4466-8A94-51E72643742E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheMerkleTrees.Api", "TheMerkleTrees.Api\TheMerkleTrees.Api.csproj", "{783636AB-35F5-481E-B831-DCF914EC140E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheMerkleTrees.Domain", "TheMerkleTrees.Domain\TheMerkleTrees.Domain.csproj", "{24840CDC-14FC-4C7B-B20E-BDBC25F5D233}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheMerkleTrees.Infrastructure", "TheMerkleTrees.Infrastructure\TheMerkleTrees.Infrastructure.csproj", "{3FCEDC6E-65F5-4211-B4A3-408DC66C9C72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21914746-5A75-4466-8A94-51E72643742E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21914746-5A75-4466-8A94-51E72643742E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21914746-5A75-4466-8A94-51E72643742E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21914746-5A75-4466-8A94-51E72643742E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{783636AB-35F5-481E-B831-DCF914EC140E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24840CDC-14FC-4C7B-B20E-BDBC25F5D233}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24840CDC-14FC-4C7B-B20E-BDBC25F5D233}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24840CDC-14FC-4C7B-B20E-BDBC25F5D233}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24840CDC-14FC-4C7B-B20E-BDBC25F5D233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FCEDC6E-65F5-4211-B4A3-408DC66C9C72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FCEDC6E-65F5-4211-B4A3-408DC66C9C72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FCEDC6E-65F5-4211-B4A3-408DC66C9C72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FCEDC6E-65F5-4211-B4A3-408DC66C9C72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
