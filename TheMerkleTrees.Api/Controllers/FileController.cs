@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using TheMerkleTrees.Domain.Models;

@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TheMerkleTrees.Infrastructure;
-using TheMerkleTrees.Domain;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using TheMerkleTrees.Domain.Models;
-using TheMerkleTrees.Infrastructure.Repositories;
 
 namespace TheMerkleTrees.Api.Controllers
 {
