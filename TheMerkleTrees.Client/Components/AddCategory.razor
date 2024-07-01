@@ -1,0 +1,86 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<div class="min-h-[15vh] w-full flex items-center justify-center bg-white mb-12">
+    <EditForm Model="@newCategory" OnValidSubmit="CreateCategory" class="w-full max-w-md p-4 flex flex-col items-center">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="text-red-500 mb-2"/>
+
+        <div class="w-full mb-2 flex flex-col items-center">
+            <label for="categoryName" class="block text-gray-700 text-sm mb-2">Nom de la catégorie</label>
+            <InputText id="categoryName" @bind-Value="newCategory.Name" class="text-gray-700 transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-2 py-1 rounded w-1/2"/>
+            <ValidationMessage For="() => newCategory.Name" class="text-red-500 text-sm mt-1"/>
+        </div>
+
+        <button class="transition ease-in-out duration-300 text-sm text-white bg-gray-700 hover:bg-gray-800 px-4 py-2 mt-2 rounded" type="submit">Ajouter</button>
+    </EditForm>
+</div>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info">@message</div>
+}
+
+@code {
+    private Category newCategory = new Category();
+    private string message;
+    private string userAddress;
+    private string apiBaseUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiBaseUrl = Configuration["ApiBaseUrl"];
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            userAddress = user.Identity.Name;
+            newCategory.Owner = userAddress;
+        }
+        else
+        {
+            message = "Utilisateur non authentifié.";
+        }
+    }
+
+    private async Task CreateCategory()
+    {
+        if (string.IsNullOrEmpty(newCategory.Name))
+        {
+            message = "Le nom de la catégorie ne peut pas être vide.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(newCategory.Owner))
+        {
+            message = "Adresse utilisateur non trouvée.";
+            return;
+        }
+        
+        newCategory.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+
+        var response = await Http.PostAsJsonAsync($"{apiBaseUrl}/api/Categories", newCategory);
+
+        if (response.IsSuccessStatusCode)
+        {
+            message = "Catégorie ajoutée avec succès.";
+            newCategory.Name = string.Empty;
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            message = $"Erreur lors de l'ajout de la catégorie : {errorContent}";
+        }
+    }
+
+    public class Category
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Owner { get; set; }
+    }
+}
