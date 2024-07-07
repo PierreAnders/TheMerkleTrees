@@ -4,18 +4,20 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 
-<div class="min-h-[15vh] w-full flex items-center justify-center bg-white mb-12">
+<div class="min-h-[20vh] w-full flex items-center justify-center bg-white mb-4">
     <EditForm Model="@newCategory" OnValidSubmit="CreateCategory" class="w-full max-w-md p-4 flex flex-col items-center">
         <DataAnnotationsValidator/>
         <ValidationSummary class="text-red-500 mb-2"/>
 
         <div class="w-full mb-2 flex flex-col items-center">
-            <label for="categoryName" class="block text-gray-700 text-sm mb-2">Nom de la catégorie</label>
-            <InputText id="categoryName" @bind-Value="newCategory.Name" class="text-gray-700 transition ease-in-out duration-600 text-sm hover:text-white border border-gray-700 hover:bg-gray-800 px-2 py-1 rounded w-1/2"/>
+            <label for="categoryName" class="block text-gray-700 text-sm mb-2">Créer une catégorie</label>
+            <InputText id="categoryName" @bind-Value="newCategory.Name" class="text-gray-700 transition ease-in-out duration-600 text-sm border border-gray-700 hover:bg-gray-200 px-2 py-1 rounded w-1/2"/>
             <ValidationMessage For="() => newCategory.Name" class="text-red-500 text-sm mt-1"/>
         </div>
 
-        <button class="transition ease-in-out duration-300 text-sm text-white bg-gray-700 hover:bg-gray-800 px-4 py-2 mt-2 rounded" type="submit">Ajouter</button>
+        <button class="transition ease-in-out duration-300 text-sm text-white hover:bg-gray-200 px-4 py-2 rounded" type="submit">
+            <img class="" src="images/add-logo.svg" width="32px" height="32px" alt="File Logo"/>
+        </button>
     </EditForm>
 </div>
 
