@@ -15,7 +15,9 @@ public static class FileMapper
             Category = entity.Category,
             IsPublic = entity.IsPublic,
             Owner = entity.Owner,
-            EncryptionKey = entity.EncryptionKey
+            EncryptionKey = entity.EncryptionKey,
+            Key = entity.Key,
+            IV = entity.IV
         };
     }
 
@@ -29,7 +31,9 @@ public static class FileMapper
             Category = file.Category,
             IsPublic = file.IsPublic,
             Owner = file.Owner,
-            EncryptionKey = file.EncryptionKey
+            EncryptionKey = file.EncryptionKey,
+            Key = file.Key,
+            IV = file.IV
         };
     }
 }
