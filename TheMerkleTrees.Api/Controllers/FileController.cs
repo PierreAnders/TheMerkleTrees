@@ -169,7 +169,7 @@ public async Task<IActionResult> DecryptFile(string id)
     byte[] fileContent = null;
 
     // Tenter de récupérer le fichier via le gateway public IPFS
-    // var response = await _httpClient.GetAsync($"https://ipfs.io/ipfs/{file.Hash}");
+    // var response = await _httpClient.GetAsync($"https://ipfs.io/ipfs/{file.Hash}"); // ==> Ne fonctionne pas si !IsPublic
     // if (response.IsSuccessStatusCode)
     // {
     //     fileContent = await response.Content.ReadAsByteArrayAsync();
