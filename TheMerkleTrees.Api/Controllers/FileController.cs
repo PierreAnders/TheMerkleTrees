@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
@@ -97,95 +98,158 @@ namespace TheMerkleTrees.Api.Controllers
                 fileContent = ms.ToArray();
             }
 
-            // Generate AES key and IV
-            using (Aes aes = Aes.Create())
+            byte[] encryptedContent;
+            string key = null;
+            string iv = null;
+
+            if (!isPublic)
             {
-                aes.GenerateKey();
-                aes.GenerateIV();
-
-                byte[] encryptedContent;
-                using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
-                using (var msEncrypt = new MemoryStream())
-                using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                // Generate AES key and IV
+                using (Aes aes = Aes.Create())
                 {
-                    await csEncrypt.WriteAsync(fileContent, 0, fileContent.Length);
-                    await csEncrypt.FlushFinalBlockAsync();
-                    encryptedContent = msEncrypt.ToArray();
+                    aes.GenerateKey();
+                    aes.GenerateIV();
+                    key = Convert.ToBase64String(aes.Key);
+                    iv = Convert.ToBase64String(aes.IV);
+
+                    using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
+                    using (var msEncrypt = new MemoryStream())
+                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        await csEncrypt.WriteAsync(fileContent, 0, fileContent.Length);
+                        await csEncrypt.FlushFinalBlockAsync();
+                        encryptedContent = msEncrypt.ToArray();
+                    }
                 }
-
-                // Upload encrypted file to IPFS
-                var formData = new MultipartFormDataContent();
-                formData.Add(new ByteArrayContent(encryptedContent), "file", file.FileName);
-
-                var response = await _httpClient.PostAsync("http://localhost:5001/api/v0/add", formData);
-                response.EnsureSuccessStatusCode();
-
-                var result = await response.Content.ReadFromJsonAsync<AddResponse>();
-                var cid = result.Hash;
-                var url = $"ipfs://{cid}";
-
-                // Save file metadata to database
-                var fileRecord = new File
-                {
-                    Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
-                    Name = file.FileName,
-                    Hash = cid,
-                    Category = category,
-                    IsPublic = isPublic,
-                    Owner = userAddress,
-                    Key = Convert.ToBase64String(aes.Key),
-                    IV = Convert.ToBase64String(aes.IV),
-                    Extension = Path.GetExtension(file.FileName) // Store the file extension
-                };
-
-                await _fileRepository.CreateAsync(fileRecord);
-
-                return Ok(new { Message = "File uploaded successfully", Url = url });
             }
-        }
+            else
+            {
+                encryptedContent = fileContent;
+            }
 
+            // Upload (encrypted or plain) file to IPFS
+            var formData = new MultipartFormDataContent();
+            formData.Add(new ByteArrayContent(encryptedContent), "file", file.FileName);
+
+            var response = await _httpClient.PostAsync("http://localhost:5001/api/v0/add", formData);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<AddResponse>();
+            var cid = result.Hash;
+            var url = $"ipfs://{cid}";
+
+            // Save file metadata to database
+            var fileRecord = new File
+            {
+                Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
+                Name = file.FileName,
+                Hash = cid,
+                Category = category,
+                IsPublic = isPublic,
+                Owner = userAddress,
+                Key = key,
+                IV = iv,
+                Extension = Path.GetExtension(file.FileName) // Store the file extension
+            };
+
+            await _fileRepository.CreateAsync(fileRecord);
+
+            return Ok(new { Message = "File uploaded successfully", Url = url });
+        }
 
         [HttpGet("decrypt/{id}")]
-        public async Task<IActionResult> DecryptFile(string id)
+public async Task<IActionResult> DecryptFile(string id)
+{
+    var file = await _fileRepository.GetAsync(id);
+    if (file == null)
+    {
+        return NotFound("Fichier non trouvé.");
+    }
+
+    byte[] fileContent = null;
+
+    // Tenter de récupérer le fichier via le gateway public IPFS
+    // var response = await _httpClient.GetAsync($"https://ipfs.io/ipfs/{file.Hash}");
+    // if (response.IsSuccessStatusCode)
+    // {
+    //     fileContent = await response.Content.ReadAsByteArrayAsync();
+    // }
+    // else
+    // {
+    //     // Si l'accès via le gateway public échoue, tenter via un nœud IPFS local
+    //     try
+    //     {
+            fileContent = await GetFileFromLocalIPFSNode(file.Hash);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Erreur lors de la récupération via le nœud local : {ex.Message}");
+    //         return BadRequest("Impossible de récupérer le fichier depuis IPFS.");
+    //     }
+    // }
+
+    if (file.IsPublic)
+    {
+        // Si le fichier est public, retourner le contenu tel quel
+        return File(fileContent, "application/octet-stream", file.Name);
+    }
+
+    try
+    {
+        // Déchiffrer le contenu
+        byte[] key = Convert.FromBase64String(file.Key);
+        byte[] iv = Convert.FromBase64String(file.IV);
+
+        using (Aes aes = Aes.Create())
         {
-            var file = await _fileRepository.GetAsync(id);
-            if (file == null)
+            aes.Key = key;
+            aes.IV = iv;
+
+            using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+            using (var msDecrypt = new MemoryStream(fileContent))
+            using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+            using (var msPlain = new MemoryStream())
             {
-                return NotFound("Fichier non trouvé.");
-            }
+                await csDecrypt.CopyToAsync(msPlain);
+                byte[] decryptedContent = msPlain.ToArray();
 
-            // Utiliser une passerelle publique IPFS pour récupérer le contenu chiffré
-            // var response = await _httpClient.GetAsync($"https://ipfs.io/ipfs/{file.Hash}");
-            var response = await _httpClient.GetAsync($"ipfs://{file.Hash}");
-            if (!response.IsSuccessStatusCode)
-            {
-                return BadRequest("Impossible de récupérer le fichier depuis IPFS.");
-            }
-
-            var encryptedContent = await response.Content.ReadAsByteArrayAsync();
-
-            // Déchiffrer le contenu
-            byte[] key = Convert.FromBase64String(file.Key);
-            byte[] iv = Convert.FromBase64String(file.IV);
-
-            using (Aes aes = Aes.Create())
-            {
-                aes.Key = key;
-                aes.IV = iv;
-
-                using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
-                using (var msDecrypt = new MemoryStream(encryptedContent))
-                using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                using (var msPlain = new MemoryStream())
-                {
-                    await csDecrypt.CopyToAsync(msPlain);
-                    byte[] decryptedContent = msPlain.ToArray();
-
-                    // Retourner le contenu déchiffré avec la bonne extension
-                    return File(decryptedContent, "application/octet-stream", file.Name);
-                }
+                // Retourner le contenu déchiffré avec la bonne extension
+                return File(decryptedContent, "application/octet-stream", file.Name);
             }
         }
+    }
+    catch (Exception ex)
+    {
+        // Log l'erreur pour le débogage
+        Console.WriteLine($"Erreur lors du déchiffrement : {ex.Message}");
+        return StatusCode(500, "Erreur interne du serveur lors du déchiffrement du fichier.");
+    }
+}
+
+private async Task<byte[]> GetFileFromLocalIPFSNode(string cid)
+{
+    // Implémenter la logique pour récupérer le fichier depuis un nœud IPFS local
+    // Par exemple, en utilisant une commande IPFS locale
+    var processStartInfo = new ProcessStartInfo
+    {
+        FileName = "ipfs",
+        Arguments = $"cat {cid}",
+        RedirectStandardOutput = true,
+        UseShellExecute = false,
+        CreateNoWindow = true
+    };
+
+    using (var process = new Process { StartInfo = processStartInfo })
+    {
+        process.Start();
+        using (var ms = new MemoryStream())
+        {
+            await process.StandardOutput.BaseStream.CopyToAsync(ms);
+            process.WaitForExit();
+            return ms.ToArray();
+        }
+    }
+}
 
         private class AddResponse
         {

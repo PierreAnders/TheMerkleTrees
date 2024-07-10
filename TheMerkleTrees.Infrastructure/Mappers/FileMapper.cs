@@ -17,7 +17,8 @@ public static class FileMapper
             Owner = entity.Owner,
             EncryptionKey = entity.EncryptionKey,
             Key = entity.Key,
-            IV = entity.IV
+            IV = entity.IV,
+            Extension = entity.Extension
         };
     }
 
@@ -33,7 +34,8 @@ public static class FileMapper
             Owner = file.Owner,
             EncryptionKey = file.EncryptionKey,
             Key = file.Key,
-            IV = file.IV
+            IV = file.IV,
+            Extension = file.Extension
         };
     }
 }

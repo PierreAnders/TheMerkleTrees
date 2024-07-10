@@ -144,7 +144,12 @@
     
     private string TruncateFileName(string fileName)
     {
-        if (string.IsNullOrEmpty(fileName) || fileName.Length < 10)
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return fileName;
+        }
+
+        if (fileName.Length <= 20)
         {
             return fileName;
         }
