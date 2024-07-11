@@ -1,4 +1,7 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Text;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using TheMerkleTrees.Domain.Models;
 using File = TheMerkleTrees.Domain.Models.File;
@@ -80,14 +83,14 @@ namespace TheMerkleTrees.Api.Controllers
             await _fileRepository.GetFilesByUserAsync(userId);
 
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string category, [FromForm] bool isPublic, [FromForm] string userAddress)
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string category,
+            [FromForm] bool isPublic, [FromForm] string userAddress)
         {
             if (file == null || file.Length == 0)
             {
                 return BadRequest("No file uploaded.");
             }
 
-            // Convert file to byte array
             byte[] fileContent;
             using (var ms = new MemoryStream())
             {
@@ -95,9 +98,36 @@ namespace TheMerkleTrees.Api.Controllers
                 fileContent = ms.ToArray();
             }
 
-            // Upload file to IPFS
+            byte[] encryptedContent;
+            string key = null;
+            string iv = null;
+
+            if (!isPublic)
+            {
+                using (Aes aes = Aes.Create())
+                {
+                    aes.GenerateKey();
+                    aes.GenerateIV();
+                    key = Convert.ToBase64String(aes.Key);
+                    iv = Convert.ToBase64String(aes.IV);
+
+                    using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
+                    using (var msEncrypt = new MemoryStream())
+                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        await csEncrypt.WriteAsync(fileContent, 0, fileContent.Length);
+                        await csEncrypt.FlushFinalBlockAsync();
+                        encryptedContent = msEncrypt.ToArray();
+                    }
+                }
+            }
+            else
+            {
+                encryptedContent = fileContent;
+            }
+            
             var formData = new MultipartFormDataContent();
-            formData.Add(new ByteArrayContent(fileContent), "file", file.FileName);
+            formData.Add(new ByteArrayContent(encryptedContent), "file", file.FileName);
 
             var response = await _httpClient.PostAsync("http://localhost:5001/api/v0/add", formData);
             response.EnsureSuccessStatusCode();
@@ -105,8 +135,7 @@ namespace TheMerkleTrees.Api.Controllers
             var result = await response.Content.ReadFromJsonAsync<AddResponse>();
             var cid = result.Hash;
             var url = $"ipfs://{cid}";
-
-            // Save file metadata to database
+            
             var fileRecord = new File
             {
                 Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
@@ -114,12 +143,92 @@ namespace TheMerkleTrees.Api.Controllers
                 Hash = cid,
                 Category = category,
                 IsPublic = isPublic,
-                Owner = userAddress
+                Owner = userAddress,
+                Key = key,
+                IV = iv,
+                Extension = Path.GetExtension(file.FileName) // Store the file extension
             };
 
             await _fileRepository.CreateAsync(fileRecord);
 
             return Ok(new { Message = "File uploaded successfully", Url = url });
+        }
+
+        [HttpGet("decrypt/{id}")]
+        public async Task<IActionResult> DecryptFile(string id)
+        {
+            var file = await _fileRepository.GetAsync(id);
+            if (file == null)
+            {
+                return NotFound("Fichier non trouvé.");
+            }
+
+            byte[] fileContent = null;
+            try
+            {
+                fileContent = await GetFileFromLocalIPFSNode(file.Hash);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération via le nœud local : {ex.Message}");
+                return BadRequest("Impossible de récupérer le fichier depuis IPFS.");
+            }
+
+            if (file.IsPublic)
+            {
+                return File(fileContent, "application/octet-stream", file.Name);
+            }
+
+            try
+            {
+                byte[] key = Convert.FromBase64String(file.Key);
+                byte[] iv = Convert.FromBase64String(file.IV);
+
+                using (Aes aes = Aes.Create())
+                {
+                    aes.Key = key;
+                    aes.IV = iv;
+
+                    using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+                    using (var msDecrypt = new MemoryStream(fileContent))
+                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    using (var msPlain = new MemoryStream())
+                    {
+                        await csDecrypt.CopyToAsync(msPlain);
+                        byte[] decryptedContent = msPlain.ToArray();
+
+                        return File(decryptedContent, "application/octet-stream", file.Name);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors du déchiffrement : {ex.Message}");
+                return StatusCode(500, "Erreur interne du serveur lors du déchiffrement du fichier.");
+            }
+        }
+
+        private async Task<byte[]> GetFileFromLocalIPFSNode(string cid)
+        {
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = "ipfs",
+                Arguments = $"cat {cid}",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = new Process { StartInfo = processStartInfo })
+            {
+                process.Start();
+                using (var ms = new MemoryStream())
+                {
+                    await process.StandardOutput.BaseStream.CopyToAsync(ms);
+                    process.WaitForExit();
+                    return ms.ToArray();
+                }
+            }
         }
 
         private class AddResponse

@@ -24,31 +24,31 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             @foreach (var file in sortedFiles)
             {
-                <div class="m-4 flex flex-col items-center justify-center">
-                    <a href="@GetLinkToFile(file.Hash)" target="_blank">
-                        @if (GetFileExtension(file.Name) == ".txt")
-                        {
-                            <img src="images/txt-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                        }
-                        else if (GetFileExtension(file.Name) == ".html")
-                        {
-                            <img src="images/html-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                        }
-                        else if (GetFileExtension(file.Name) == ".pdf")
-                        {
-                            <img src="images/pdf-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                        }
-                        else if (GetFileExtension(file.Name) == ".png" || GetFileExtension(file.Name) == ".jpg" || GetFileExtension(file.Name) == ".jpeg")
-                        {
-                            <img src="images/img-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                        }
-                        else
-                        {
-                            <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo"/>
-                        }
-                    </a>
-                    <div class="flex justify-center items-center text-gray-400 text-xs my-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
-                </div>
+            <div class="m-4 flex flex-col items-center justify-center">
+                <a href="@GetLinkToFile(file.Id)" target="_blank">
+                    @if (GetFileExtension(file.Name) == ".txt")
+                    {
+                    <img src="images/txt-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".html")
+                    {
+                    <img src="images/html-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".pdf")
+                    {
+                    <img src="images/pdf-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else if (GetFileExtension(file.Name) == ".png" || GetFileExtension(file.Name) == ".jpg" || GetFileExtension(file.Name) == ".jpeg")
+                    {
+                    <img src="images/img-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                    else
+                    {
+                    <img src="images/file-logo.svg" width="64px" height="64px" alt="File Logo"/>
+                    }
+                </a>
+                <div class="flex justify-center items-center text-gray-400 text-xs my-1 mx-4 h-8 text-center">@TruncateFileName(file.Name)</div>
+            </div>
             }
         </div>
     </div>
@@ -119,31 +119,47 @@
         string fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
         return fileExtension;
     }
-
-    private string GetLinkToFile(string hash)
+    
+    private async Task DownloadFile(string id)
     {
-        return $"ipfs://{hash}";
+        var fileUrl = $"{apiBaseUrl}/api/Files/decrypt/{id}";
+        var response = await Http.GetAsync(fileUrl);
+        if (response.IsSuccessStatusCode)
+        {
+            var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"') ?? "downloaded_file";
+            var fileContent = await response.Content.ReadAsByteArrayAsync();
+            var base64File = Convert.ToBase64String(fileContent);
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, base64File);
+        }
+        else
+        {
+            Console.WriteLine("Erreur lors du téléchargement du fichier.");
+        }
     }
-
-    private async Task DownloadFile(string hash)
-    {
-        var fileName = $"{hash}.txt";
-        var fileUrl = $"ipfs://{hash}";
-        await JS.InvokeVoidAsync("downloadFileFromUrl", fileName, fileUrl);
-    }
-
+    
     private string TruncateFileName(string fileName)
     {
-        if (string.IsNullOrEmpty(fileName) || fileName.Length < 10)
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return fileName;
+        }
+
+        if (fileName.Length <= 20)
         {
             return fileName;
         }
 
         return $"{fileName.Substring(0, 12)}...{fileName.Substring(fileName.Length - 8)}";
     }
-
+    
+    private string GetLinkToFile(string id)
+    {
+        return $"{apiBaseUrl}/api/Files/decrypt/{id}";
+    }
+    
     public void Dispose()
     {
         FileState.OnChange -= StateHasChanged;
     }
+
 }
