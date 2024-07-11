@@ -76,7 +76,7 @@ Before starting, ensure you have the following installed on your machine:
 ## Usage
 Once the project is running, you can access the user interface via your browser at http://localhost:5292. The API will be accessible at http://localhost:5083.
 
-## Contribution
+## Contributing
 
 Contributions are welcome! We offer free storage for all contributors on our own IPFS nodes (limited to 50Go).
 
