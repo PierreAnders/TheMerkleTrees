@@ -1,5 +1,55 @@
+# Fichiers de configuration sensibles
+appsettings.json
+appsettings.Development.json
+
+# Dossiers de configuration de l'IDE
+.vs/
+.idea/
+.vscode/
+
+# Fichiers et dossiers de build
 bin/
 obj/
-/packages/
-riderModule.iml
-/_ReSharper.Caches/
+
+# Logs
+*.log
+
+# Fichiers de déploiement
+.publish/
+.Dockerfile
+
+# Fichiers utilisateur spécifiques à Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Fichiers de dépendances locales
+node_modules/
+wwwroot/node_modules/
+
+# Fichiers de cache
+*.cache
+*.temp
+*.tmp
+
+# Fichiers de configuration de l'OS
+.DS_Store
+Thumbs.db
+
+# Fichiers de configuration de l'éditeur
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# Fichiers de configuration de JetBrains Rider
+.idea/
+*.iml
+
+# Fichiers de configuration de Visual Studio Code
+.vscode/
+
+# Fichiers de configuration de build
+*.csproj.user
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets

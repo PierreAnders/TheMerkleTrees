@@ -44,5 +44,4 @@ public class FileRepository : IFileRepository
         (await _filesCollection.Find(file => file.Owner == userId).ToListAsync())
         .Select(entity => entity.ToDomain())
         .ToList();
-
 }
