@@ -104,7 +104,6 @@ namespace TheMerkleTrees.Api.Controllers
 
             if (!isPublic)
             {
-                // Generate AES key and IV
                 using (Aes aes = Aes.Create())
                 {
                     aes.GenerateKey();
@@ -126,8 +125,7 @@ namespace TheMerkleTrees.Api.Controllers
             {
                 encryptedContent = fileContent;
             }
-
-            // Upload (encrypted or plain) file to IPFS
+            
             var formData = new MultipartFormDataContent();
             formData.Add(new ByteArrayContent(encryptedContent), "file", file.FileName);
 
@@ -137,8 +135,7 @@ namespace TheMerkleTrees.Api.Controllers
             var result = await response.Content.ReadFromJsonAsync<AddResponse>();
             var cid = result.Hash;
             var url = $"ipfs://{cid}";
-
-            // Save file metadata to database
+            
             var fileRecord = new File
             {
                 Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
@@ -158,98 +155,81 @@ namespace TheMerkleTrees.Api.Controllers
         }
 
         [HttpGet("decrypt/{id}")]
-public async Task<IActionResult> DecryptFile(string id)
-{
-    var file = await _fileRepository.GetAsync(id);
-    if (file == null)
-    {
-        return NotFound("Fichier non trouvé.");
-    }
-
-    byte[] fileContent = null;
-
-    // Tenter de récupérer le fichier via le gateway public IPFS
-    // var response = await _httpClient.GetAsync($"https://ipfs.io/ipfs/{file.Hash}"); // ==> Ne fonctionne pas si !IsPublic
-    // if (response.IsSuccessStatusCode)
-    // {
-    //     fileContent = await response.Content.ReadAsByteArrayAsync();
-    // }
-    // else
-    // {
-    //     // Si l'accès via le gateway public échoue, tenter via un nœud IPFS local
-    //     try
-    //     {
-            fileContent = await GetFileFromLocalIPFSNode(file.Hash);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($"Erreur lors de la récupération via le nœud local : {ex.Message}");
-    //         return BadRequest("Impossible de récupérer le fichier depuis IPFS.");
-    //     }
-    // }
-
-    if (file.IsPublic)
-    {
-        // Si le fichier est public, retourner le contenu tel quel
-        return File(fileContent, "application/octet-stream", file.Name);
-    }
-
-    try
-    {
-        // Déchiffrer le contenu
-        byte[] key = Convert.FromBase64String(file.Key);
-        byte[] iv = Convert.FromBase64String(file.IV);
-
-        using (Aes aes = Aes.Create())
+        public async Task<IActionResult> DecryptFile(string id)
         {
-            aes.Key = key;
-            aes.IV = iv;
-
-            using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
-            using (var msDecrypt = new MemoryStream(fileContent))
-            using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-            using (var msPlain = new MemoryStream())
+            var file = await _fileRepository.GetAsync(id);
+            if (file == null)
             {
-                await csDecrypt.CopyToAsync(msPlain);
-                byte[] decryptedContent = msPlain.ToArray();
+                return NotFound("Fichier non trouvé.");
+            }
 
-                // Retourner le contenu déchiffré avec la bonne extension
-                return File(decryptedContent, "application/octet-stream", file.Name);
+            byte[] fileContent = null;
+            try
+            {
+                fileContent = await GetFileFromLocalIPFSNode(file.Hash);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération via le nœud local : {ex.Message}");
+                return BadRequest("Impossible de récupérer le fichier depuis IPFS.");
+            }
+
+            if (file.IsPublic)
+            {
+                return File(fileContent, "application/octet-stream", file.Name);
+            }
+
+            try
+            {
+                byte[] key = Convert.FromBase64String(file.Key);
+                byte[] iv = Convert.FromBase64String(file.IV);
+
+                using (Aes aes = Aes.Create())
+                {
+                    aes.Key = key;
+                    aes.IV = iv;
+
+                    using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+                    using (var msDecrypt = new MemoryStream(fileContent))
+                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    using (var msPlain = new MemoryStream())
+                    {
+                        await csDecrypt.CopyToAsync(msPlain);
+                        byte[] decryptedContent = msPlain.ToArray();
+
+                        return File(decryptedContent, "application/octet-stream", file.Name);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors du déchiffrement : {ex.Message}");
+                return StatusCode(500, "Erreur interne du serveur lors du déchiffrement du fichier.");
             }
         }
-    }
-    catch (Exception ex)
-    {
-        // Log l'erreur pour le débogage
-        Console.WriteLine($"Erreur lors du déchiffrement : {ex.Message}");
-        return StatusCode(500, "Erreur interne du serveur lors du déchiffrement du fichier.");
-    }
-}
 
-private async Task<byte[]> GetFileFromLocalIPFSNode(string cid)
-{
-    // Implémenter la logique pour récupérer le fichier depuis un nœud IPFS local
-    // Par exemple, en utilisant une commande IPFS locale
-    var processStartInfo = new ProcessStartInfo
-    {
-        FileName = "ipfs",
-        Arguments = $"cat {cid}",
-        RedirectStandardOutput = true,
-        UseShellExecute = false,
-        CreateNoWindow = true
-    };
-
-    using (var process = new Process { StartInfo = processStartInfo })
-    {
-        process.Start();
-        using (var ms = new MemoryStream())
+        private async Task<byte[]> GetFileFromLocalIPFSNode(string cid)
         {
-            await process.StandardOutput.BaseStream.CopyToAsync(ms);
-            process.WaitForExit();
-            return ms.ToArray();
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = "ipfs",
+                Arguments = $"cat {cid}",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = new Process { StartInfo = processStartInfo })
+            {
+                process.Start();
+                using (var ms = new MemoryStream())
+                {
+                    await process.StandardOutput.BaseStream.CopyToAsync(ms);
+                    process.WaitForExit();
+                    return ms.ToArray();
+                }
+            }
         }
-    }
-}
 
         private class AddResponse
         {

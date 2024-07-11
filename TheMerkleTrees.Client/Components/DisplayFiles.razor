@@ -119,12 +119,7 @@
         string fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
         return fileExtension;
     }
-
-    // private string GetLinkToFile(string hash)
-    // {
-    //     return $"ipfs://{hash}";
-    // }
-
+    
     private async Task DownloadFile(string id)
     {
         var fileUrl = $"{apiBaseUrl}/api/Files/decrypt/{id}";
