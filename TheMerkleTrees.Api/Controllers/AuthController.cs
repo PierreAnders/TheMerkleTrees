@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using TheMerkleTrees.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace TheMerkleTrees.Api.Controllers
 {
@@ -15,42 +16,63 @@ namespace TheMerkleTrees.Api.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IUserRepository userRepository, IConfiguration configuration)
+        public AuthController(IUserRepository userRepository, IConfiguration configuration, ILogger<AuthController> logger)
         {
             _userRepository = userRepository;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User newUser)
+        public async Task<IActionResult> Register([FromBody] Authentication newUser)
         {
+            _logger.LogInformation("Register endpoint called");
+            _logger.LogInformation("Email: {Email}", newUser.Email);
+
             var existingUser = await _userRepository.GetUserByEmailAsync(newUser.Email);
             if (existingUser != null)
             {
+                _logger.LogWarning("Email already in use: {Email}", newUser.Email);
                 return BadRequest(new { message = "Email already in use" });
             }
 
             var user = new User
             {
                 Email = newUser.Email,
-                PasswordHash = HashPassword(newUser.PasswordHash)
+                PasswordHash = HashPassword(newUser.Password)
             };
 
-            await _userRepository.CreateUserAsync(user);
+            try
+            {
+
+                await _userRepository.CreateUserAsync(user);
+                _logger.LogInformation("User registered successfully: {Email}", newUser.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Registration failed");
+                return Problem("An error occurred during registration.");
+            }
             return Ok(new { message = "User registered successfully" });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] User currentUser)
+        public async Task<IActionResult> Login([FromBody] Authentication currentUser)
         {
+            _logger.LogInformation("Login endpoint called");
+            _logger.LogInformation("Email: {Email}", currentUser.Email);
+
             var user = await _userRepository.GetUserByEmailAsync(currentUser.Email);
-            if (user == null || !VerifyPassword(currentUser.PasswordHash, user.PasswordHash))
+            if (user == null || !VerifyPassword(currentUser.Password, user.PasswordHash))
             {
+                _logger.LogWarning("Invalid email or password for: {Email}", currentUser.Email);
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
             var token = GenerateJwtToken(user);
+            _logger.LogInformation("User logged in successfully: {Email}", currentUser.Email);
             return Ok(new { access_token = token });
         }
 

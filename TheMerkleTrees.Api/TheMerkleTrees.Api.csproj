@@ -23,6 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\TheMerkleTrees.Client\TheMerkleTrees.Client.csproj" />
       <ProjectReference Include="..\TheMerkleTrees.Domain\TheMerkleTrees.Domain.csproj" />
       <ProjectReference Include="..\TheMerkleTrees.Infrastructure\TheMerkleTrees.Infrastructure.csproj" />
     </ItemGroup>
