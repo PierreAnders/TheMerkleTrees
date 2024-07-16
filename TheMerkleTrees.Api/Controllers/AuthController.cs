@@ -46,7 +46,6 @@ namespace TheMerkleTrees.Api.Controllers
 
             try
             {
-
                 await _userRepository.CreateUserAsync(user);
                 _logger.LogInformation("User registered successfully: {Email}", newUser.Email);
             }

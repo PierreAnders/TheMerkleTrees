@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuration des services CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -20,6 +21,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Configuration des services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -41,6 +43,8 @@ builder.Services.AddScoped(sp =>
     var settings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
     return client.GetDatabase(settings.DatabaseName);
 });
+
+builder.Services.AddHttpContextAccessor();
 
 // Configuration de l'authentification JWT
 builder.Services.AddAuthentication(options =>
@@ -67,6 +71,7 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
+// Configuration de l'application
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -75,11 +80,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler(new ExceptionHandlerOptions
-    {
-        AllowStatusCode404Response = true,
-        ExceptionHandlingPath = "/error"
-    });
+    app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 

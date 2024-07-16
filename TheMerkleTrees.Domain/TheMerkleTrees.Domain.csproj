@@ -7,12 +7,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.1.2" />
       <PackageReference Include="MongoDB.Bson" Version="2.27.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Interfaces\Services\" />
       <Folder Include="Services\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
+        <HintPath>..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.5\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
