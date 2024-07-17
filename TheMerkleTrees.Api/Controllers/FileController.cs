@@ -1,9 +1,8 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
-using System.Text;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
-using TheMerkleTrees.Domain.Models;
 using File = TheMerkleTrees.Domain.Models.File;
 
 namespace TheMerkleTrees.Api.Controllers
@@ -25,18 +24,18 @@ namespace TheMerkleTrees.Api.Controllers
         public async Task<List<File>> Get() =>
             await _fileRepository.GetAsync();
 
-        [HttpGet("{id:length(24)}")]
-        public async Task<ActionResult<File>> Get(string id)
-        {
-            var file = await _fileRepository.GetAsync(id);
-
-            if (file is null)
-            {
-                return NotFound();
-            }
-
-            return file;
-        }
+        // [HttpGet("{id:length(24)}")]
+        // public async Task<ActionResult<File>> Get(string id)
+        // {
+        //     var file = await _fileRepository.GetAsync(id);
+        //
+        //     if (file is null)
+        //     {
+        //         return NotFound();
+        //     }
+        //
+        //     return file;
+        // }
 
         [HttpPost]
         public async Task<IActionResult> Post(File newFile)
@@ -46,50 +45,68 @@ namespace TheMerkleTrees.Api.Controllers
             return CreatedAtAction(nameof(Get), new { id = newFile.Id }, newFile);
         }
 
-        [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(string id, File updatedFile)
-        {
-            var file = await _fileRepository.GetAsync(id);
+        // [HttpPut("{id:length(24)}")]
+        // public async Task<IActionResult> Update(string id, File updatedFile)
+        // {
+        //     var file = await _fileRepository.GetAsync(id);
+        //
+        //     if (file is null)
+        //     {
+        //         return NotFound();
+        //     }
+        //
+        //     updatedFile.Id = file.Id;
+        //
+        //     await _fileRepository.UpdateAsync(id, updatedFile);
+        //
+        //     return NoContent();
+        // }
 
-            if (file is null)
+        [HttpDelete("{name}")]
+        public async Task<IActionResult> Delete(string name)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
             {
-                return NotFound();
+                return Unauthorized();
             }
 
-            updatedFile.Id = file.Id;
-
-            await _fileRepository.UpdateAsync(id, updatedFile);
+            await _fileRepository.RemoveAsync(name, userId);
 
             return NoContent();
         }
 
-        [HttpDelete("{id:length(24)}")]
-        public async Task<IActionResult> Delete(string id)
+        [HttpGet("user")]
+        public async Task<ActionResult<List<File>>> GetFilesByUser()
         {
-            var file = await _fileRepository.GetAsync(id);
-
-            if (file is null)
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            
+            if (userId == null)
             {
-                return NotFound();
+                return Unauthorized();
             }
+            
+            var files = await _fileRepository.GetFilesByUserAsync(userId);
 
-            await _fileRepository.RemoveAsync(id);
-
-            return NoContent();
+            return files;
         }
-
-        [HttpGet("user/{userId}")]
-        public async Task<List<File>> GetFilesByUser(string userId) =>
-            await _fileRepository.GetFilesByUserAsync(userId);
 
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string category,
             [FromForm] bool isPublic, [FromForm] string userAddress)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+            
             if (file == null || file.Length == 0)
             {
                 return BadRequest("No file uploaded.");
             }
+            
 
             byte[] fileContent;
             using (var ms = new MemoryStream())
@@ -143,7 +160,7 @@ namespace TheMerkleTrees.Api.Controllers
                 Hash = cid,
                 Category = category,
                 IsPublic = isPublic,
-                Owner = userAddress,
+                Owner = userId,
                 Key = key,
                 IV = iv,
                 Extension = Path.GetExtension(file.FileName) // Store the file extension
@@ -154,10 +171,17 @@ namespace TheMerkleTrees.Api.Controllers
             return Ok(new { Message = "File uploaded successfully", Url = url });
         }
 
-        [HttpGet("decrypt/{id}")]
-        public async Task<IActionResult> DecryptFile(string id)
+        [HttpGet("decrypt/{name}")]
+        public async Task<IActionResult> DecryptFile(string name)
         {
-            var file = await _fileRepository.GetAsync(id);
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var file = await _fileRepository.GetAsync(name, userId);
             if (file == null)
             {
                 return NotFound("Fichier non trouvé.");
