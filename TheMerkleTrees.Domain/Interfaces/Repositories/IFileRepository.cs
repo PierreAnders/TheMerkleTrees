@@ -11,4 +11,5 @@ public interface IFileRepository
     Task UpdateAsync(string id, File updateFile);
     Task RemoveAsync(string name, string userId);
     Task<List<File>> GetFilesByUserAsync(string userId);
+    Task<List<File>> GetFilesByUserAndCategoryAsync(string category, string userId);
 }

@@ -90,6 +90,22 @@ namespace TheMerkleTrees.Api.Controllers
 
             return files;
         }
+        
+        
+        [HttpGet("user/category/{category}")]
+        public async Task<ActionResult<List<File>>> GetFilesByUserAndCategory(string category)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var files = await _fileRepository.GetFilesByUserAndCategoryAsync(category, userId);
+
+            return files;
+        }
 
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string category,
