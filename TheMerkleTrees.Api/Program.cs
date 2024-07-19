@@ -1,4 +1,5 @@
 using System.Text;
+using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -8,6 +9,8 @@ using TheMerkleTrees.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+DotEnv.Load();
 
 // Configuration des services CORS
 builder.Services.AddCors(options =>

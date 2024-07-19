@@ -1,6 +1,7 @@
 # Fichiers de configuration sensibles
 appsettings.json
 appsettings.Development.json
+.env
 
 # Dossiers de configuration de l'IDE
 .vs/
