@@ -54,3 +54,7 @@ Thumbs.db
 *.csproj.user
 *.csproj.nuget.g.props
 *.csproj.nuget.g.targets
+
+# Fichiers IPFS
+go-ipfs/
+go-ipfs_v0.14.0_linux-amd64.tar.gz

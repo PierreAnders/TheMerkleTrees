@@ -13,14 +13,25 @@ var builder = WebApplication.CreateBuilder(args);
 DotEnv.Load();
 
 // Configuration des services CORS
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowAllOrigins",
+//         builder =>
+//         {
+//             builder.AllowAnyOrigin()
+//                 .AllowAnyMethod()
+//                 .AllowAnyHeader();
+//         });
+// });
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
+    options.AddPolicy("SpecificOrigins",
         builder =>
         {
-            builder.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
+            builder.WithOrigins("https://shiny-spoon-xg6xqqj9vxghp549-3000.app.github.dev")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
         });
 });
 
@@ -59,7 +70,7 @@ builder.Services.AddAuthentication(options =>
     {
         var jwtSettings = builder.Configuration.GetSection("Jwt");
         options.TokenValidationParameters = new TokenValidationParameters
-        {
+        {           
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -91,7 +102,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseCors("AllowAllOrigins");
+// app.UseCors("AllowAllOrigins");
+app.UseCors("SpecificOrigins");
 
 app.UseAuthentication();
 app.UseAuthorization();
