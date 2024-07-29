@@ -28,8 +28,8 @@ public class FileRepository : IFileRepository
         .Select(entity => entity.ToDomain())
         .ToList();
 
-    public async Task<File?> GetAsync(string id) =>
-        (await _filesCollection.Find(x => x.Id == id).FirstOrDefaultAsync())?.ToDomain();
+    public async Task<File?> GetAsync(string name, string userId) => 
+        (await _filesCollection.Find(file => file.Name == name && file.Owner == userId).FirstOrDefaultAsync()).ToDomain();
 
     public async Task CreateAsync(File newFile) =>
         await _filesCollection.InsertOneAsync(newFile.ToEntity());
@@ -37,11 +37,16 @@ public class FileRepository : IFileRepository
     public async Task UpdateAsync(string id, File updateFile) =>
         await _filesCollection.ReplaceOneAsync(x => x.Id == id, updateFile.ToEntity());
 
-    public async Task RemoveAsync(string id) =>
-        await _filesCollection.DeleteOneAsync(x => x.Id == id);
-
+    public async Task RemoveAsync(string name, string userId) =>
+        await _filesCollection.DeleteOneAsync(x => x.Name == name && x.Owner == userId);
+        
     public async Task<List<File>> GetFilesByUserAsync(string userId) =>
         (await _filesCollection.Find(file => file.Owner == userId).ToListAsync())
+        .Select(entity => entity.ToDomain())
+        .ToList();
+    
+    public async Task<List<File>> GetFilesByUserAndCategoryAsync(string category, string userId) =>
+        (await _filesCollection.Find(file => file.Owner == userId && file.Category == category).ToListAsync())
         .Select(entity => entity.ToDomain())
         .ToList();
 }

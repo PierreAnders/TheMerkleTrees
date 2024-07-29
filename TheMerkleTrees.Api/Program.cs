@@ -1,25 +1,29 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using System.Text;
+using dotenv.net;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
-using TheMerkleTrees.Infrastructure;
 using TheMerkleTrees.Infrastructure.Configurations;
 using TheMerkleTrees.Infrastructure.Repositories;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+DotEnv.Load();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
-        policyBuilder =>
+    options.AddPolicy("SpecificOrigins",
+        builder =>
         {
-            policyBuilder.WithOrigins("http://localhost:5292")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+            builder.WithOrigins("https://shiny-spoon-xg6xqqj9vxghp549-3000.app.github.dev")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
         });
 });
 
+// Configuration des services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -27,6 +31,8 @@ builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDB"));
 builder.Services.AddSingleton<IFileRepository, FileRepository>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepository>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IShortcutRepository, ShortcutRepository>();
 
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
@@ -41,10 +47,34 @@ builder.Services.AddScoped(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
+builder.Services.AddHttpContextAccessor();
+
+// Configuration de l'authentification JWT
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        var jwtSettings = builder.Configuration.GetSection("Jwt");
+        options.TokenValidationParameters = new TokenValidationParameters
+        {           
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+        };
+    });
+
 builder.Services.AddHttpClient();   
 
 var app = builder.Build();
 
+// Configuration de l'application
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -53,11 +83,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler(new ExceptionHandlerOptions
-    {
-        AllowStatusCode404Response = true,
-        ExceptionHandlingPath = "/error"
-    });
+    app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 
@@ -65,8 +91,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseCors("AllowSpecificOrigin");
+// app.UseCors("AllowAllOrigins");
+app.UseCors("SpecificOrigins");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,6 +1,7 @@
 # Fichiers de configuration sensibles
 appsettings.json
 appsettings.Development.json
+.env
 
 # Dossiers de configuration de l'IDE
 .vs/
@@ -53,3 +54,7 @@ Thumbs.db
 *.csproj.user
 *.csproj.nuget.g.props
 *.csproj.nuget.g.targets
+
+# Fichiers IPFS
+go-ipfs/
+go-ipfs_v0.14.0_linux-amd64.tar.gz

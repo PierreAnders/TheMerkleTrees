@@ -28,8 +28,12 @@ namespace TheMerkleTrees.Infrastructure.Repositories
             .Select(entity => entity.ToDomain())
             .ToList();
 
-        public async Task<Category?> GetAsync(string id) =>
-            (await _categoriesCollection.Find(x => x.Id == id).FirstOrDefaultAsync())?.ToDomain();
+        public async Task<Category?> GetAsync(string categoryName, string userId)
+        {
+            var categoryEntity = await _categoriesCollection.Find(c => c.Owner == userId && c.Name == categoryName).FirstOrDefaultAsync();
+            var categoryModel = categoryEntity?.ToDomain();
+            return categoryModel;
+        }
 
         public async Task CreateAsync(Category newCategory) =>
             await _categoriesCollection.InsertOneAsync(newCategory.ToEntity());
@@ -37,8 +41,8 @@ namespace TheMerkleTrees.Infrastructure.Repositories
         public async Task UpdateAsync(string id, Category updateCategory) =>
             await _categoriesCollection.ReplaceOneAsync(x => x.Id == id, updateCategory.ToEntity());
 
-        public async Task RemoveAsync(string id) =>
-            await _categoriesCollection.DeleteOneAsync(x => x.Id == id);
+        public async Task RemoveAsync(string categoryName, string userId) =>
+            await _categoriesCollection.DeleteOneAsync(c => c.Owner == userId && c.Name == categoryName);
 
         public async Task<List<Category>> GetCategoriesByUserAsync(string userId) =>
             (await _categoriesCollection.Find(category => category.Owner == userId).ToListAsync())

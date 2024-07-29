@@ -1,6 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using TheMerkleTrees.Domain.Models;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Security.Claims;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace TheMerkleTrees.Api.Controllers
 {
@@ -16,68 +22,94 @@ namespace TheMerkleTrees.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<List<Category>> Get() =>
-            await _categoryRepository.GetAsync();
-
-        [HttpGet("{id:length(24)}")]
-        public async Task<ActionResult<Category>> Get(string id)
+        public async Task<ActionResult<List<Category>>> Get()
         {
-            var category = await _categoryRepository.GetAsync(id);
+            var categories = await _categoryRepository.GetAsync();
+            return Ok(categories);
+        }
 
-            if (category is null)
+        [HttpGet("{categoryName}")]
+        public async Task<ActionResult<Category>> Get(string categoryName)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var category = await _categoryRepository.GetAsync(categoryName, userId);
+
+            if (category == null)
             {
                 return NotFound();
             }
 
-            return category;
+            return Ok(category);
         }
-
+        
         [HttpPost]
-        public async Task<IActionResult> Post(Category newCategory)
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody] Category newCategory)
         {
-            if (newCategory == null || string.IsNullOrEmpty(newCategory.Name) || string.IsNullOrEmpty(newCategory.Owner))
+            if (newCategory == null || string.IsNullOrEmpty(newCategory.Name))
             {
                 return BadRequest("Invalid category data.");
             }
 
+            // Affiche les revendications pour le débogage
+            var claims = User.Claims.ToList();
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
+            
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             newCategory.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+            newCategory.Owner = userId;
+
             await _categoryRepository.CreateAsync(newCategory);
             return CreatedAtAction(nameof(Get), new { id = newCategory.Id }, newCategory);
         }
 
-        [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(string id, Category updatedCategory)
+        [HttpDelete("{categoryName}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(string categoryName)
         {
-            var category = await _categoryRepository.GetAsync(id);
-
-            if (category is null)
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
             {
-                return NotFound();
+                return Unauthorized();
             }
 
-            updatedCategory.Id = category.Id;
-            await _categoryRepository.UpdateAsync(id, updatedCategory);
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id:length(24)}")]
-        public async Task<IActionResult> Delete(string id)
-        {
-            var category = await _categoryRepository.GetAsync(id);
-
-            if (category is null)
-            {
-                return NotFound();
-            }
-
-            await _categoryRepository.RemoveAsync(id);
+            await _categoryRepository.RemoveAsync(categoryName, userId);
 
             return NoContent();
         }
         
         [HttpGet("user/{userId}")]
-        public async Task<List<Category>> GetCategoriesByUser(string userId) =>
-            await _categoryRepository.GetCategoriesByUserAsync(userId);
+        public async Task<ActionResult<List<Category>>> GetCategoriesByUser(string userId)
+        {
+            var categories = await _categoryRepository.GetCategoriesByUserAsync(userId);
+            return Ok(categories);
+        }
+        
+        [Authorize]
+        [HttpGet("user")]
+        public async Task<ActionResult<List<Category>>> GetCategoriesByUser()
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var categories = await _categoryRepository.GetCategoriesByUserAsync(userId);
+            return Ok(categories);
+        }
     }
 }
