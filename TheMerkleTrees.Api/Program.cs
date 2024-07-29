@@ -12,18 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 DotEnv.Load();
 
-// Configuration des services CORS
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy("AllowAllOrigins",
-//         builder =>
-//         {
-//             builder.AllowAnyOrigin()
-//                 .AllowAnyMethod()
-//                 .AllowAnyHeader();
-//         });
-// });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SpecificOrigins",
@@ -44,6 +32,7 @@ builder.Services.Configure<MongoDBSettings>(
 builder.Services.AddSingleton<IFileRepository, FileRepository>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepository>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IShortcutRepository, ShortcutRepository>();
 
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {

@@ -1,7 +1,7 @@
 ## The Merkle Trees
 
 Welcome to **The Merkle Trees**, an innovative decentralized cloud project. This project leverages cutting-edge
-technologies to offer a secure and decentralized storage solution. It is built with a Blazor WebAssembly frontend and an
+technologies to offer a secure and decentralized storage solution. It is built with an
 ASP.Net Core API. To function correctly, it requires a local IPFS node and a MongoDB connection string.
 
 ### Table of Contents
@@ -33,7 +33,6 @@ mitigating the risks associated with centralized cloud solutions.
 Before starting, ensure you have the following installed on your machine:
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Node.js](https://nodejs.org/)
 - [IPFS](https://ipfs.io/)
 - [MongoDB](https://www.mongodb.com/)
 
@@ -62,23 +61,18 @@ Before starting, ensure you have the following installed on your machine:
       },
       ```
 
-4. **Run the frontend**
-   ```bash
-   cd TheMerkleTrees.Client
-   dotnet run
-   ```
-5. **Run the backend***
+4. **Run the project***
    ```bash
    cd TheMerkleTrees.Api
    dotnet run
    ```
 
 ## Usage
-Once the project is running, you can access the user interface via your browser at http://localhost:5292. The API will be accessible at http://localhost:5083.
+Once the project is running, you can access to the swagger at http://localhost:5083/swagger/index.html.
 
 ## Contributing
 
-Contributions are welcome! We offer free storage for all contributors on our own IPFS nodes (limited to 50Go).
+Contributions are welcome!
 
 ## License
 
