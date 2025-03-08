@@ -17,24 +17,50 @@ namespace TheMerkleTrees.Api.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
+        private readonly JwtSettings _jwtSettings;
 
-        public AuthController(IUserRepository userRepository, IConfiguration configuration, ILogger<AuthController> logger)
+        public AuthController(
+            IUserRepository userRepository,
+            IConfiguration configuration,
+            ILogger<AuthController> logger)
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _logger = logger;
+
+            // Chargement sécurisé des paramètres JWT
+            _jwtSettings = new JwtSettings
+            {
+                Key = Environment.GetEnvironmentVariable("JWT_KEY") ?? configuration["Jwt:Key"],
+                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? configuration["Jwt:Issuer"],
+                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? configuration["Jwt:Audience"],
+                ExpirationMinutes = int.TryParse(configuration["Jwt:ExpirationMinutes"], out var exp) ? exp : 120
+            };
+
+            ValidateJwtSettings();
+        }
+
+        private void ValidateJwtSettings()
+        {
+            if (string.IsNullOrEmpty(_jwtSettings.Key) || _jwtSettings.Key.Length < 32)
+                throw new ArgumentException("JWT Key must be at least 32 characters long");
+
+            if (string.IsNullOrEmpty(_jwtSettings.Issuer))
+                throw new ArgumentException("JWT Issuer is required");
+
+            if (string.IsNullOrEmpty(_jwtSettings.Audience))
+                throw new ArgumentException("JWT Audience is required");
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] Authentication newUser)
         {
-            _logger.LogInformation("Register endpoint called");
-            _logger.LogInformation("Email: {Email}", newUser.Email);
+            _logger.LogInformation("Register endpoint called for email: {Email}", newUser.Email);
 
             var existingUser = await _userRepository.GetUserByEmailAsync(newUser.Email);
             if (existingUser != null)
             {
-                _logger.LogWarning("Email already in use: {Email}", newUser.Email);
+                _logger.LogWarning("Registration failed - Email already in use: {Email}", newUser.Email);
                 return BadRequest(new { message = "Email already in use" });
             }
 
@@ -48,31 +74,34 @@ namespace TheMerkleTrees.Api.Controllers
             {
                 await _userRepository.CreateUserAsync(user);
                 _logger.LogInformation("User registered successfully: {Email}", newUser.Email);
+                return Ok(new { message = "User registered successfully" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Registration failed");
+                _logger.LogError(ex, "Registration failed for email: {Email}", newUser.Email);
                 return Problem("An error occurred during registration.");
             }
-            return Ok(new { message = "User registered successfully" });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Authentication currentUser)
         {
-            _logger.LogInformation("Login endpoint called");
-            _logger.LogInformation("Email: {Email}", currentUser.Email);
+            _logger.LogInformation("Login attempt for email: {Email}", currentUser.Email);
 
             var user = await _userRepository.GetUserByEmailAsync(currentUser.Email);
             if (user == null || !VerifyPassword(currentUser.Password, user.PasswordHash))
             {
-                _logger.LogWarning("Invalid email or password for: {Email}", currentUser.Email);
+                _logger.LogWarning("Invalid login attempt for email: {Email}", currentUser.Email);
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
             var token = GenerateJwtToken(user);
-            _logger.LogInformation("User logged in successfully: {Email}", currentUser.Email);
-            return Ok(new { access_token = token });
+            _logger.LogInformation("Successful login for email: {Email}", currentUser.Email);
+            
+            return Ok(new { 
+                access_token = token,
+                expires_in = _jwtSettings.ExpirationMinutes * 60
+            });
         }
 
         private string HashPassword(string password)
@@ -90,23 +119,33 @@ namespace TheMerkleTrees.Api.Controllers
 
         private string GenerateJwtToken(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Email, user.Email)
             };
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(120),
-                signingCredentials: credentials);
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
+                signingCredentials: credentials
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private class JwtSettings
+        {
+            public string Key { get; set; } = string.Empty;
+            public string Issuer { get; set; } = string.Empty;
+            public string Audience { get; set; } = string.Empty;
+            public int ExpirationMinutes { get; set; }
         }
     }
 }

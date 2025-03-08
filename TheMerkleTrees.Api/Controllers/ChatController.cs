@@ -15,15 +15,13 @@ namespace TheMerkleTrees.Api.Controllers
             _logger = logger;
         }
 
-        [HttpPost("sendMessage")]
+        [HttpPost("message")]
         public async Task<ActionResult> SendMessage([FromBody] string message)
         {
-            var baseUrl = "https://api.perplexity.ai";
+            // URL locale pour le serveur Ollama
+            var baseUrl = "http://localhost:11434/api/chat";
 
-            // Clé API
-            var apiKey = Environment.GetEnvironmentVariable("API_KEY_PERPLEXITY");
-
-            // Messages à envoyer
+            // Messages à envoyer au modèle DeepSeek
             var messages = new[]
             {
                 new { role = "system", content = "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user." },
@@ -33,8 +31,9 @@ namespace TheMerkleTrees.Api.Controllers
             // Création de l'objet de la requête
             var requestData = new
             {
-                model = "mistral-7b-instruct",
-                messages = messages
+                model = "deepseek-r1:7b",
+                messages = messages,
+                stream = false // Option pour désactiver le streaming des réponses
             };
 
             // Sérialisation de l'objet de la requête en JSON
@@ -43,15 +42,11 @@ namespace TheMerkleTrees.Api.Controllers
 
             // Configuration du client HTTP
             using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-            // Construction de l'URL pour la requête POST
-            var url = $"{baseUrl}/chat/completions";
 
             try
             {
-                // Envoi de la requête POST
-                var response = await client.PostAsync(url, data);
+                // Envoi de la requête POST au serveur Ollama
+                var response = await client.PostAsync(baseUrl, data);
 
                 // Vérification que la requête a réussi
                 response.EnsureSuccessStatusCode();
@@ -59,7 +54,7 @@ namespace TheMerkleTrees.Api.Controllers
                 // Lecture de la réponse
                 var result = await response.Content.ReadAsStringAsync();
 
-                // Affichage de la réponse
+                // Affichage de la réponse dans les logs
                 _logger.LogInformation(result);
                 return Ok(result);
             }
