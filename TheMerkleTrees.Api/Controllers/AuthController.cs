@@ -27,8 +27,7 @@ namespace TheMerkleTrees.Api.Controllers
             _userRepository = userRepository;
             _configuration = configuration;
             _logger = logger;
-
-            // Chargement sécurisé des paramètres JWT
+            
             _jwtSettings = new JwtSettings
             {
                 Key = Environment.GetEnvironmentVariable("JWT_KEY") ?? configuration["Jwt:Key"],

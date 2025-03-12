@@ -2,11 +2,13 @@ using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization;
 using TheMerkleTrees.Domain.Interfaces.Repositories;
 using File = TheMerkleTrees.Domain.Models.File;
 
 namespace TheMerkleTrees.Api.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class FilesController : ControllerBase
@@ -20,48 +22,14 @@ namespace TheMerkleTrees.Api.Controllers
             _httpClient = httpClient;
         }
 
-        [HttpGet]
-        public async Task<List<File>> Get() =>
-            await _fileRepository.GetAsync();
-
-        // [HttpGet("{id:length(24)}")]
-        // public async Task<ActionResult<File>> Get(string id)
-        // {
-        //     var file = await _fileRepository.GetAsync(id);
-        //
-        //     if (file is null)
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     return file;
-        // }
-
         [HttpPost]
         public async Task<IActionResult> Post(File newFile)
         {
             await _fileRepository.CreateAsync(newFile);
 
-            return CreatedAtAction(nameof(Get), new { id = newFile.Id }, newFile);
+            return CreatedAtAction(nameof(Post), new { id = newFile.Id }, newFile);
         }
-
-        // [HttpPut("{id:length(24)}")]
-        // public async Task<IActionResult> Update(string id, File updatedFile)
-        // {
-        //     var file = await _fileRepository.GetAsync(id);
-        //
-        //     if (file is null)
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     updatedFile.Id = file.Id;
-        //
-        //     await _fileRepository.UpdateAsync(id, updatedFile);
-        //
-        //     return NoContent();
-        // }
-
+        
         [HttpDelete("{name}")]
         public async Task<IActionResult> Delete(string name)
         {
@@ -90,7 +58,6 @@ namespace TheMerkleTrees.Api.Controllers
 
             return files;
         }
-        
         
         [HttpGet("user/category/{category}")]
         public async Task<ActionResult<List<File>>> GetFilesByUserAndCategory(string category)
@@ -179,7 +146,7 @@ namespace TheMerkleTrees.Api.Controllers
                 Owner = userId,
                 Key = key,
                 IV = iv,
-                Extension = Path.GetExtension(file.FileName) // Store the file extension
+                Extension = Path.GetExtension(file.FileName)
             };
 
             await _fileRepository.CreateAsync(fileRecord);
@@ -270,7 +237,6 @@ namespace TheMerkleTrees.Api.Controllers
                 }
             }
         }
-
         private class AddResponse
         {
             public string Hash { get; set; }
