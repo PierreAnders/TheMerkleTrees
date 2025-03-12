@@ -21,13 +21,6 @@ namespace TheMerkleTrees.Api.Controllers
             _categoryRepository = categoryRepository;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<Category>>> Get()
-        {
-            var categories = await _categoryRepository.GetAsync();
-            return Ok(categories);
-        }
-
         [HttpGet("{categoryName}")]
         public async Task<ActionResult<Category>> Get(string categoryName)
         {
@@ -54,13 +47,6 @@ namespace TheMerkleTrees.Api.Controllers
             if (newCategory == null || string.IsNullOrEmpty(newCategory.Name))
             {
                 return BadRequest("Invalid category data.");
-            }
-
-            // Affiche les revendications pour le débogage
-            var claims = User.Claims.ToList();
-            foreach (var claim in claims)
-            {
-                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
             }
             
             var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -89,13 +75,6 @@ namespace TheMerkleTrees.Api.Controllers
             await _categoryRepository.RemoveAsync(categoryName, userId);
 
             return NoContent();
-        }
-        
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<List<Category>>> GetCategoriesByUser(string userId)
-        {
-            var categories = await _categoryRepository.GetCategoriesByUserAsync(userId);
-            return Ok(categories);
         }
         
         [Authorize]
