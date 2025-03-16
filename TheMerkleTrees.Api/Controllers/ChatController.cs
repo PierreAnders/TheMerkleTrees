@@ -127,7 +127,7 @@ namespace TheMerkleTrees.Api.Controllers
     public class ChatRequest
     {
         [Required(ErrorMessage="Le message est obligatoire")]
-        [StringLength(10000, ErrorMessage = "Le message ne doit pas dépasser {1} caractères")]
+        // [StringLength(10000, ErrorMessage = "Le message ne doit pas dépasser {1} caractères")]
         public string Message { get; set; }
         
         [Required(ErrorMessage = "Le model est obligatoire")]
@@ -163,8 +163,8 @@ namespace TheMerkleTrees.Api.Controllers
 // Mistral 7B : model = "mistral"
 // LLaMA 3 : model = "llama3"
 // DeepSeek-R1 7B : model = "deepseek-r1:7b"
-// Code Llama 7B : model = "codellama:7b"
-// Qwen-1.5 : model = "qwen:1.5"
+// Code Llama 7B : model = "codellama"
+// Qwen-1.5 : model = "qwen"
     
 
 // Installer btop

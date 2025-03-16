@@ -75,6 +75,7 @@ namespace TheMerkleTrees.Api.Controllers
         }
 
         [HttpPost("upload")]
+        [RequestSizeLimit(1073741824)] 
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string category,
             [FromForm] bool isPublic, [FromForm] string userAddress)
         {
